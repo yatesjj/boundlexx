@@ -4,6 +4,19 @@
     "version": "2.0.0",
     "tasks": [
         {
+            "label": "Boundlexx: Create Game Objects (Skills Only)",
+            "type": "shell",
+            "command": "source <(cat ${workspaceFolder}/.local.env | grep -v '^#' | sed -E 's|^(.+)=(.*)$|export \\1=\\2|g') && python ${workspaceFolder}/manage.py create_game_objects --skill",
+            "problemMatcher": []
+        },
+        {
+            "label": "Boundlexx: Create Game Objects (Recipes Only)",
+            "type": "shell",
+            "command": "source <(cat ${workspaceFolder}/.local.env | grep -v '^#' | sed -E 's|^(.+)=(.*)$|export \\1=\\2|g') && python ${workspaceFolder}/manage.py create_game_objects --recipe",
+            "problemMatcher": []
+        },
+        // Remove this invalid compound task from the tasks array
+        {
             "label": "Boundlexx: Update Requirements",
             "type": "shell",
             "command": "pip-compile ${workspaceFolder}/requirements/in/base.in ${workspaceFolder}/requirements/in/dev.in -o ${workspaceFolder}/requirements/dev.txt --upgrade && pip-compile ${workspaceFolder}/requirements/in/base.in ${workspaceFolder}/requirements/in/production.in -o ${workspaceFolder}/requirements/production.txt --upgrade",
@@ -40,11 +53,21 @@
             "problemMatcher": []
         },
         {
-            "label": "Boundlexx: Create Game Objects",
+            "label": "Boundlexx: Create Game Objects (LEGACY, DO NOT USE)",
             "type": "shell",
-            "command": "source <(cat ${workspaceFolder}/.local.env | grep -v '^#' | sed -E 's|^(.+)=(.*)$|export \\1=\\2|g') && python ${workspaceFolder}/manage.py create_game_objects",
+            "command": "source <(cat ${workspaceFolder}/.local.env | grep -v '^#' | sed -E 's|^(.+)=(.*)$|export \\1=\\2|g') && python ${workspaceFolder}/manage.py create_game_objects --skill --recipe",
             "problemMatcher": []
         },
+        {
+            "label": "Boundlexx: Create Game Objects (Full Ingestion)",
+            "type": "shell",
+            "dependsOn": [
+                "Boundlexx: Create Game Objects (Skills Only)",
+                "Boundlexx: Create Game Objects (Recipes Only)"
+            ],
+            "dependsOrder": "sequence",
+            "problemMatcher": []
+        }
     ],
     "inputs": [
         {
@@ -62,9 +85,9 @@
                 "makesuperuser",
                 "createsuperuser",
                 "migrate",
-                "makemigrations",
+                "makemigrations"
             ],
             "default": "shell_plus"
-        },
+        }
     ]
 }

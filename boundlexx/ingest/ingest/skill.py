@@ -27,6 +27,7 @@ def run(**kwargs):  # pylint: disable=too-many-locals
     with click.progressbar(skilltrees.items()) as pbar:
         skill_groups_created = 0
         skills_created = 0
+        created_skill_names = []
 
         for skill_group_name, skill_group_dict in pbar:
             attrs = {
@@ -74,11 +75,15 @@ def run(**kwargs):  # pylint: disable=too-many-locals
                     name=skill_dict["name"], defaults=attrs
                 )
 
+                created_skill_names.append(skill_dict["name"])
+
                 if created:
                     skills_created += 1
                 else:
                     _set_skill_attrs(skill, attrs)
                     skill.save()
+
+    # print(f"[DEBUG] Skills created or updated: {created_skill_names}")
         print_result("skill groups", skill_groups_created)
         print_result("skills", skills_created)
 
