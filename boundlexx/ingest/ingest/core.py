@@ -50,7 +50,10 @@ def _create_items(items_list, subtitles):
                 string_id=compiled_items[string_item_id]["stringID"],
             )
             item_obj.name = compiled_items[string_item_id]["name"]
-            item_obj.item_subtitle = subtitles[item["subtitle_id"]]
+            subtitle_id = item["subtitle_id"]
+            # print(f"[DEBUG] subtitle_id: {subtitle_id} (type: {type(subtitle_id)})")
+            # print(f"[DEBUG] subtitles keys: {list(subtitles.keys())}")
+            item_obj.item_subtitle = subtitles[subtitle_id]
             item_obj.mint_value = compiled_items[string_item_id]["coinValue"]
             item_obj.max_stack = compiled_items[string_item_id]["maxStackSize"]
             item_obj.can_be_sold = item_obj.game_id not in settings.BOUNDLESS_NO_SELL
@@ -90,7 +93,8 @@ def _create_colors(color_list):
     with click.progressbar(color_palettes) as pbar:
         for color_palette in pbar:
             for color_variations, color_id in color_palette["colorVariations"]:
-
+                # print(f"[DEBUG] color_id: {color_id} (type: {type(color_id)})")
+                # print(f"[DEBUG] colors keys: {list(colors.keys())}")
                 _, was_created = ColorValue.objects.get_or_create(
                     color=colors[color_id],
                     color_type=color_palette["name"],

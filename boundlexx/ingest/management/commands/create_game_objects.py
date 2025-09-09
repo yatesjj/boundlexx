@@ -74,8 +74,20 @@ def command(force, start_item_id, end_item_id, skip_variants, **kwargs):
         for index in kwargs:
             kwargs[index] = True  # pylint: disable=modified-iterating-dict
 
+    # Always run skills before recipes if recipe group is selected
+    if kwargs.get("recipe") and not kwargs.get("skill"):
+        skill_module = import_module(f"{BASE}.skill")
+        skill_module.run(
+            force=force,
+            start_id=start_item_id,
+            end_id=end_item_id,
+            color_variants=(not skip_variants),
+        )
     for index, value in kwargs.items():
         if value:
+            # Avoid running skill twice if both recipe and skill are set
+            if index == "skill" and kwargs.get("recipe"):
+                continue
             module = import_module(f"{BASE}.{index}")
             module.run(
                 force=force,

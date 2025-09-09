@@ -40,6 +40,8 @@ Remote Containers extension. It is recommend to use those. So make sure you have
 Setup
 -----
 
+**Quick Start for Development:**
+
 #. Clone the repo.
 #. Copy `docker-compose.override.example.yml` to `docker-compose.override.yml`
    and update the path you your local Boundless install
@@ -50,8 +52,46 @@ Setup
    (`View -> Command Palette...` or `Ctrl+Shift+P`)
 #. VS Code will now build the Docker images and start them up. When it is
    done, you should see a normal VS Code Workspace
-#. Go to http://127.0.0.1:8000 in your Web browser and click "Sign In".
-   Then sign in with Discord or Github
-#. Back in VS Code, run the command "Tasks: Run Task" and then "Boundlexx: Make Superuser".
-#. Enter the username for your user when prompted.
-#. Repeat "Tasks: Run Task" for the "Boundlexx: Ingest Game Data" and "Boundlexx: Create Game Objects" tasks.
+
+**Initial Database Setup:**
+
+#. Before starting the server for the first time, apply all database migrations:
+
+   .. code-block:: bash
+
+      python manage.py migrate
+
+#. Start the Django development server:
+
+   .. code-block:: bash
+
+      python manage.py runserver 0.0.0.0:8000
+
+#. The site will be available at http://127.0.0.1:8000 on your host machine.
+
+**User and Data Setup:**
+
+#. Open http://127.0.0.1:8000 in your web browser. The main site and API will be available, but to access the admin or create users, you must create a Django superuser.
+#. In VS Code, open the Command Palette (`Ctrl+Shift+P` or `Cmd+Shift+P` on Mac) and select "Tasks: Run Task".
+#. Choose "Boundlexx: Manage" from the list. When prompted for the management command, enter `createsuperuser` and follow the prompts to set up your admin user.
+
+#. Again open "Tasks: Run Task" and run "Boundlexx: Ingest Game Data" to import the latest Boundless game data.
+
+#. Run the full ingestion workflow using the VS Code task "Boundlexx: Create Game Objects (Full Ingestion)" which will automatically run skills first, then recipes in the correct order. Alternatively, you can run the individual tasks:
+
+   - "Boundlexx: Create Game Objects (Skills Only)" (must run first)
+   - "Boundlexx: Create Game Objects (Recipes Only)" (run after skills)
+
+#. **Important:** Skills must always be imported before recipes. The "Full Ingestion" task handles this automatically, but if running manual commands:
+
+   .. code-block:: bash
+
+      # Import skills first (required!)
+      python manage.py create_game_objects --skill
+
+      # Then import recipes
+      python manage.py create_game_objects --recipe
+
+#. If you encounter a KeyError or missing data error during this step (e.g., `Skill.DoesNotExist: Decoration Crafting`), ensure you ran the skills import first before attempting recipes.
+
+#. After these steps, your Boundlexx instance should be ready for use and development. To log in as an admin, visit http://127.0.0.1:8000/admin/ and use the credentials you created.

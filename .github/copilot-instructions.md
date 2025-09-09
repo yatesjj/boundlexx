@@ -1,3 +1,98 @@
+## Authentication & Superuser Setup
+
+- Boundlexx uses Django's standard authentication (username/password). There is no Discord, Github, or other social login enabled by default.
+- To create an admin user, use the VS Code task "Boundlexx: Manage" and enter `createsuperuser` when prompted for the management command.
+- Log in at http://127.0.0.1:8000/admin/ with the credentials you create.
+
+## Starting the Django Development Server
+
+- Before starting the server for the first time, you must apply all database migrations:
+
+  ```sh
+  python manage.py migrate
+  ```
+
+- Then start the Django development server inside the dev container:
+
+  ```sh
+  python manage.py runserver 0.0.0.0:8000
+  ```
+- This will make the site available at http://127.0.0.1:8000 on your host machine.
+- For production or multi-service setups, use Docker Compose as described in the main documentation.
+
+## Game Data Ingestion Workflow (IMPORTANT)
+
+### ✅ Automated VS Code Tasks (Recommended)
+- **"Boundlexx: Create Game Objects (Full Ingestion)"** - Runs skills then recipes automatically in correct order
+- **"Boundlexx: Create Game Objects (Skills Only)"** - Import skills only
+- **"Boundlexx: Create Game Objects (Recipes Only)"** - Import recipes only (run after skills)
+
+### 🚨 Critical Requirements
+1. **Skills MUST be imported before recipes** - recipes have foreign key dependencies on skills
+2. **Never use the legacy task** marked "DO NOT USE" - it's unreliable
+3. **Use separate commands** - running `--skill --recipe` together doesn't work due to transaction visibility issues
+
+### Manual Command Workflow
+```sh
+# Step 1: Import game data first
+python manage.py ingest_game_data 249.4.0
+
+# Step 2: Import skills (required first!)
+python manage.py create_game_objects --skill
+
+# Step 3: Import recipes (only after skills)
+python manage.py create_game_objects --recipe
+```
+
+### Troubleshooting
+- **KeyError during ingestion:** Ensure game data import completed successfully
+- **`Skill.DoesNotExist` error:** Skills must be imported before recipes
+- **Carriage return warnings:** Environment file has Windows line endings - run `sed -i 's/\r$//' .local.env`
+## Modernization & Migration Plan (2025)
+
+### Policy Clarification
+- The directory `docs/modernization/template_examples` is for research/reference only. No tracking or documentation of work for this build should occur there. All tracking must be in `MODERNIZATION_TRACKING.md` and related main docs.
+
+### Sequenced Steps
+1. **Preparation**
+  - Backup database, Redis, Docker images.
+  - Use feature branches and tag before/after each major step.
+  - Only run commands in the correct Docker/VS Code devcontainer environment.
+  - Use VS Code tasks for all management commands.
+
+2. **Issue-by-Issue Plan**
+  - Update Github Actions: Review modern workflows, update, and validate.
+  - Simplify/Update Project Structure: Refactor to match modern standards, test all commands.
+  - Replace DRF with Django Ninja: Prototype v2 API, maintain compatibility, or create v3 if needed.
+  - Replace Celery with TaskIQ: Migrate tasks incrementally, validate, keep Celery until proven.
+  - Update Requirements Management: Move to `pyproject.toml` and `uv`, keep old files until validated.
+  - Update Linters: Add Ruff and mypy, incrementally fix issues, then remove old linters.
+  - Raise Code Coverage: Add/expand tests to reach 85%+.
+  - Remove Huey: Convert tasks to Celery/TaskIQ, validate, then remove Huey.
+  - Move setup.cfg into pyproject.toml: Migrate configs, test, remove old config after validation.
+  - Rename Container Images: Update Dockerfiles/Compose, test builds and runs.
+  - Fix Steam Login: Update scripts for Steam login, test with 2FA/session tickets.
+  - Update to Django 4.2+: Upgrade incrementally, resolve deprecations, update dependencies, test after each step.
+  - Update to Python 3.10+: Update Dockerfiles, CI, and envs, test all services and dependencies.
+  - Ensure Containers Build in GHA: Update workflows to build/test containers on push.
+
+3. **Research & Conflict Mitigation**
+  - Review official docs for Django, Python, TaskIQ, Django Ninja, Ruff, uv, Docker, and CI/CD.
+  - Upgrade incrementally, resolve deprecation warnings, check third-party compatibility.
+  - Validate all jobs in PRs before merging.
+
+4. **Rollback & Documentation**
+  - Tag before/after each major migration for rollback.
+  - Restore database/Redis from backup if migrations fail.
+  - Keep old configs/scripts until new ones are fully validated.
+  - Log all actions, rationale, and rollback steps in `MODERNIZATION_TRACKING.md`.
+
+5. **Next Steps**
+  - Archive or remove `template_examples` to avoid confusion.
+  - Begin with environment backup and branch setup.
+  - Start with the first actionable issue (GHA update), documenting every step.
+
+**Pause before making any environment changes.**
 
 
 # Copilot Instructions for Boundlexx Modernization
@@ -27,6 +122,11 @@ Boundlexx is a Django monorepo for Boundless game data, supporting both containe
 - **Hybrid Local:**
   - Create `.venv` and install from `requirements/dev.txt` (see `SETUP_LOCAL_VENV.md`).
   - Run: `python manage.py <command>`
+- **VS Code Tasks (Recommended):**
+  - Use "Tasks: Run Task" from Command Palette for all common operations
+  - Key tasks: "Boundlexx: Manage", "Boundlexx: Migrate Database", "Boundlexx: Ingest Game Data"
+  - **Ingestion:** Use "Boundlexx: Create Game Objects (Full Ingestion)" for automated skills+recipes workflow
+  - Avoid tasks marked "LEGACY, DO NOT USE"
 - **Lint/Format:**
   - `docker-compose run lint` (Black, Flake8, isort, Bandit)
   - `docker-compose run format` (Black, isort)
@@ -40,6 +140,7 @@ Boundlexx is a Django monorepo for Boundless game data, supporting both containe
 
 ## Project-Specific Conventions
 - All modernization and troubleshooting steps must be logged in `docs/modernization/` with rationale and rollback.
+- The `docs/modernization/template_examples/` directory is for research/reference only and must NOT be used to track or document any work in this build. All tracking and documentation must be done in the main modernization files (e.g., `MODERNIZATION_TRACKING.md`).
 - Use `pip-compile` to update requirements; never edit `dev.txt` or `production.txt` directly.
 - Dockerfiles may use Debian archive workarounds (see modernization log).
 - Exclude migrations, static cache, and some utility files from linting/formatting (see config files).
