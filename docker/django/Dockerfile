@@ -1,4 +1,5 @@
 # base image used by other stages
+
 FROM python:3.9-slim-buster AS base
 
 ARG DJANGO_UID=1000
