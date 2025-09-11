@@ -67,6 +67,18 @@
             ],
             "dependsOrder": "sequence",
             "problemMatcher": []
+        },
+        {
+            "label": "Container: Check Status",
+            "type": "shell",
+            "command": "python ${workspaceFolder}/container_status.py",
+            "problemMatcher": []
+        },
+        {
+            "label": "Container: Setup Development",
+            "type": "shell",
+            "command": "python ${workspaceFolder}/setup_development_container_improved.py",
+            "problemMatcher": []
         }
     ],
     "inputs": [

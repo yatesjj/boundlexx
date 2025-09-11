@@ -83,7 +83,7 @@ def run(**kwargs):  # pylint: disable=too-many-locals
                     _set_skill_attrs(skill, attrs)
                     skill.save()
 
-    # print(f"[DEBUG] Skills created or updated: {created_skill_names}")
+        # print(f"[DEBUG] Skills created or updated: {created_skill_names}")
         print_result("skill groups", skill_groups_created)
         print_result("skills", skills_created)
 
