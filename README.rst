@@ -132,33 +132,51 @@ Expected output: `boundlexx-yatesjj-django-1`, `boundlexx-yatesjj-postgres-1`, e
 Container Management Scripts
 ----------------------------
 
-The project includes several scripts to help manage different container environments:
+The project includes scripts to help manage different container environments with automatic prefixing and port management:
 
 **Development Container Setup:**
 
-* `setup_development_container.py` - Prefixes container names with folder name for clear identification as development environment. Uses original ports (8000, 5432, etc.)
+* `setup_development_container_improved.py` - Sets up main development environment with folder-based container name prefixes (e.g., `boundlexx-yatesjj-django`). Uses original ports (8000, 5432, 6379). Supports `--dry-run` for testing changes.
 
 **Test Container Setup:**
 
-* `setup_test_container.py` - Sets up test containers with ports offset by +1 (8001, 5433, etc.) and prefixed names for parallel testing alongside development
+* `setup_test_container.py` - Creates test environments with port offsets (+1) and prefixed names for parallel testing alongside development. Test containers use ports 8001, 5433, 6380, etc. Supports `--dry-run` for testing changes.
 
-**Parallel Test Environments:**
+**Container Status:**
 
-* `run_for_parallel_test_containers.py` - Dynamically creates multiple test instances with configurable port offsets for simultaneous testing
+* `container_status.py` - Utility script to check current container configuration and status.
 
 .. code-block:: bash
 
-   # Set up development container (original ports)
-   python setup_development_container.py
+   # Set up development container (original ports, folder-prefixed names)
+   python setup_development_container_improved.py
+   
+   # Optional: preview changes first
+   python setup_development_container_improved.py --dry-run
 
-   # Set up test container (ports +1)
+   # Set up test container (offset ports +1, folder-prefixed names)  
    python setup_test_container.py
+   
+   # Check container status
+   python container_status.py
 
-   # Run parallel test instance 1 (ports +1)
-   python run_for_parallel_test_containers.py --instance 1
+**Testing Workflow:**
 
-   # Run parallel test instance 2 (ports +2)
-   python run_for_parallel_test_containers.py --instance 2
+For testing container changes, clone to a separate location and use the test script:
 
-   # Stop and cleanup instance
-   python run_for_parallel_test_containers.py --instance 1 down
+.. code-block:: bash
+
+   # Clone to test location
+   git clone https://github.com/yatesjj/boundlexx.git C:\\VSCode\\boundlexx-test-1\\boundlexx
+   cd C:\\VSCode\\boundlexx-test-1\\boundlexx
+   
+   # Setup and test
+   cp .env .local.env
+   cp docker-compose.override.example.yml docker-compose.override.yml
+   python setup_test_container.py --dry-run
+   python setup_test_container.py
+   
+   # Cleanup when done
+   docker-compose down && cd .. && rm -rf boundlexx-test-1
+
+See `docs/modernization/ENVIRONMENT_SETUP.md` for detailed setup and testing workflows.

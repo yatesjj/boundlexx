@@ -128,3 +128,79 @@ boundlexx-experiment-*        # Experiment containers
 - ✅ **Clear separation** of concerns
 
 This prevents container name conflicts and makes it easy to run multiple environments simultaneously.
+
+## 🧪 Testing Container Management Changes
+
+When making changes to container management scripts or Docker configuration, follow this testing workflow:
+
+### Quick Testing Workflow
+
+1. **Setup Test Environment:**
+   ```bash
+   # Clone to test location
+   git clone https://github.com/yatesjj/boundlexx.git C:\VSCode\boundlexx-test-1\boundlexx
+   cd C:\VSCode\boundlexx-test-1\boundlexx
+   
+   # Setup local files
+   cp .env .local.env
+   cp docker-compose.override.example.yml docker-compose.override.yml
+   ```
+
+2. **Test Container Scripts:**
+   ```bash
+   # Test with dry-run first
+   python setup_test_container.py --dry-run
+   
+   # Apply changes (creates boundlexx-test-1-* containers with port offsets)
+   python setup_test_container.py
+   
+   # Verify container setup
+   python container_status.py
+   ```
+
+3. **Verify Isolation:**
+   ```bash
+   # Start test environment
+   docker-compose up -d
+   
+   # Check containers (should see offset ports like 8001, 5433, 6380)
+   docker ps --format "table {{.Names}}\t{{.Ports}}"
+   
+   # Verify no conflicts with main development
+   # (your main boundlexx-yatesjj-* containers should still be running)
+   ```
+
+4. **Test Functionality:**
+   ```bash
+   # Test database connection
+   docker-compose run --rm manage dbshell
+   
+   # Test web application (should be on port 8001)
+   curl http://127.0.0.1:8001
+   ```
+
+5. **Cleanup:**
+   ```bash
+   # Stop and remove test containers
+   docker-compose down
+   docker system prune -f
+   
+   # Remove test directory
+   cd ..
+   rm -rf C:\VSCode\boundlexx-test-1
+   ```
+
+### Environment Comparison
+
+| Environment Type | Container Names | Ports | Script | Use Case |
+|-----------------|----------------|-------|--------|----------|
+| **Main Development** | `boundlexx-yatesjj-*` | 8000, 5432, 6379 | `setup_development_container_improved.py` | Daily development work |
+| **Test Environment** | `boundlexx-test-1-*` | 8001, 5433, 6380 | `setup_test_container.py` | Testing changes, PR verification |
+| **Experiment** | `boundlexx-experiment-*` | 8000, 5432, 6379 | `setup_development_container_improved.py` | Feature experiments |
+
+### Benefits of Test Environment Approach:
+- ✅ **Safe testing** - No risk to main development data
+- ✅ **Port isolation** - Automatic port offsets prevent conflicts  
+- ✅ **Quick setup** - Standardized testing workflow
+- ✅ **Easy cleanup** - Complete environment removal in one command
+- ✅ **Parallel development** - Run main and test environments simultaneously
