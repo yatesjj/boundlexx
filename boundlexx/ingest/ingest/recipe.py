@@ -57,7 +57,7 @@ def _get_requirements(requirements_list):
     for skill_dict in requirements_list:
         skill_name = skill_dict["attribute"][:-6]
         skill_name = SKILL_NAME_MAP.get(skill_name, skill_name)
-    # print(f"[DEBUG] Looking up Skill with name: {skill_name}")
+        # print(f"[DEBUG] Looking up Skill with name: {skill_name}")
         requirement, _ = RecipeRequirement.objects.get_or_create(
             skill=Skill.objects.get(name=skill_name),
             level=skill_dict["level"],

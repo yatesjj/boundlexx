@@ -29,7 +29,7 @@ def offset_port_by_instance(match, instance_num):
         new_host_port = str(int(host_port) + instance_num)
     except ValueError:
         new_host_port = host_port
-    return f'{prefix}{new_host_port}{suffix}:{container_port}'
+    return f"{prefix}{new_host_port}{suffix}:{container_port}"
 
 
 def create_temp_compose_files(instance_num):
@@ -39,14 +39,14 @@ def create_temp_compose_files(instance_num):
 
     # Files to process
     compose_files = [
-        Path('docker-compose.yml'),
-        Path('docker-compose.override.yml'),
+        Path("docker-compose.yml"),
+        Path("docker-compose.override.yml"),
     ]
-    env_file = Path('.env')
+    env_file = Path(".env")
 
     # Patterns
     port_pattern = re.compile(r'(["\']?)(\d{4,5})(["\']?):(\d{4,5})')
-    name_pattern = re.compile(r'(container_name|service|network|name):\s*([\w-]+)')
+    name_pattern = re.compile(r"(container_name|service|network|name):\s*([\w-]+)")
 
     temp_files = []
 
@@ -55,13 +55,14 @@ def create_temp_compose_files(instance_num):
         if not compose_file.exists():
             continue
 
-        temp_file = compose_file.with_suffix(f'.instance{instance_num}{compose_file.suffix}')
-        text = compose_file.read_text(encoding='utf-8')
+        temp_file = compose_file.with_suffix(
+            f".instance{instance_num}{compose_file.suffix}"
+        )
+        text = compose_file.read_text(encoding="utf-8")
 
         # Offset ports
         text = port_pattern.sub(
-            lambda m: offset_port_by_instance(m, instance_num),
-            text
+            lambda m: offset_port_by_instance(m, instance_num), text
         )
 
         # Prefix names with folder and instance
@@ -71,52 +72,60 @@ def create_temp_compose_files(instance_num):
                 return match.group(0)
             elif value.startswith(folder_name):
                 # Replace existing folder prefix with folder + instance
-                new_value = value.replace(folder_name, f"{folder_name}{instance_suffix}", 1)
-                return f'{key}: {new_value}'
+                new_value = value.replace(
+                    folder_name, f"{folder_name}{instance_suffix}", 1
+                )
+                return f"{key}: {new_value}"
             else:
-                return f'{key}: {folder_name}{instance_suffix}-{value}'
+                return f"{key}: {folder_name}{instance_suffix}-{value}"
 
         text = name_pattern.sub(prefix_name_with_instance, text)
 
-        temp_file.write_text(text, encoding='utf-8')
+        temp_file.write_text(text, encoding="utf-8")
         temp_files.append(temp_file)
-        print(f'Created temporary file: {temp_file}')
+        print(f"Created temporary file: {temp_file}")
 
     # Process .env file
     if env_file.exists():
-        temp_env_file = Path(f'.env.instance{instance_num}')
-        lines = env_file.read_text(encoding='utf-8').splitlines()
+        temp_env_file = Path(f".env.instance{instance_num}")
+        lines = env_file.read_text(encoding="utf-8").splitlines()
         new_lines = []
 
         for line in lines:
             # Offset port numbers in env vars
-            port_match = re.match(r'([A-Z_]+)=(\d{4,5})', line)
+            port_match = re.match(r"([A-Z_]+)=(\d{4,5})", line)
             if port_match:
                 key, port = port_match.groups()
                 try:
                     new_port = str(int(port) + instance_num)
-                    new_lines.append(f'{key}={new_port}')
+                    new_lines.append(f"{key}={new_port}")
                     continue
                 except ValueError:
                     pass
 
             # Prefix names in env vars
-            name_match = re.match(r'([A-Z_]+)=(.+)', line)
-            if name_match and not name_match.group(2).startswith(f"{folder_name}{instance_suffix}"):
+            name_match = re.match(r"([A-Z_]+)=(.+)", line)
+            if name_match and not name_match.group(2).startswith(
+                f"{folder_name}{instance_suffix}"
+            ):
                 key, value = name_match.groups()
-                if 'NAME' in key or 'SERVICE' in key or 'NETWORK' in key:
+                if "NAME" in key or "SERVICE" in key or "NETWORK" in key:
                     if value.startswith(folder_name):
-                        new_value = value.replace(folder_name, f"{folder_name}{instance_suffix}", 1)
-                        new_lines.append(f'{key}={new_value}')
+                        new_value = value.replace(
+                            folder_name, f"{folder_name}{instance_suffix}", 1
+                        )
+                        new_lines.append(f"{key}={new_value}")
                     else:
-                        new_lines.append(f'{key}={folder_name}{instance_suffix}-{value}')
+                        new_lines.append(
+                            f"{key}={folder_name}{instance_suffix}-{value}"
+                        )
                     continue
 
             new_lines.append(line)
 
-        temp_env_file.write_text('\n'.join(new_lines) + '\n', encoding='utf-8')
+        temp_env_file.write_text("\n".join(new_lines) + "\n", encoding="utf-8")
         temp_files.append(temp_env_file)
-        print(f'Created temporary env file: {temp_env_file}')
+        print(f"Created temporary env file: {temp_env_file}")
 
     return temp_files
 
@@ -126,18 +135,18 @@ def run_docker_compose(instance_num, command_args):
     compose_args = []
 
     # Add compose file arguments
-    for file_name in ['docker-compose.yml', 'docker-compose.override.yml']:
-        temp_file = Path(file_name).with_suffix(f'.instance{instance_num}.yml')
+    for file_name in ["docker-compose.yml", "docker-compose.override.yml"]:
+        temp_file = Path(file_name).with_suffix(f".instance{instance_num}.yml")
         if temp_file.exists():
-            compose_args.extend(['-f', str(temp_file)])
+            compose_args.extend(["-f", str(temp_file)])
 
     # Add env file argument
-    temp_env_file = Path(f'.env.instance{instance_num}')
+    temp_env_file = Path(f".env.instance{instance_num}")
     if temp_env_file.exists():
-        compose_args.extend(['--env-file', str(temp_env_file)])
+        compose_args.extend(["--env-file", str(temp_env_file)])
 
     # Build full command
-    cmd = ['docker-compose'] + compose_args + command_args
+    cmd = ["docker-compose"] + compose_args + command_args
 
     print(f"Running: {' '.join(cmd)}")
     return subprocess.run(cmd)
@@ -146,38 +155,38 @@ def run_docker_compose(instance_num, command_args):
 def cleanup_temp_files(instance_num):
     """Clean up temporary files for the instance."""
     patterns = [
-        f'docker-compose.instance{instance_num}.yml',
-        f'docker-compose.override.instance{instance_num}.yml',
-        f'.env.instance{instance_num}'
+        f"docker-compose.instance{instance_num}.yml",
+        f"docker-compose.override.instance{instance_num}.yml",
+        f".env.instance{instance_num}",
     ]
 
     for pattern in patterns:
         temp_file = Path(pattern)
         if temp_file.exists():
             temp_file.unlink()
-            print(f'Cleaned up: {temp_file}')
+            print(f"Cleaned up: {temp_file}")
 
 
 def main():
     parser = argparse.ArgumentParser(
-        description='Run parallel test containers with instance-specific ports and names'
+        description="Run parallel test containers with instance-specific ports and names"
     )
     parser.add_argument(
-        '--instance',
+        "--instance",
         type=int,
         required=True,
-        help='Instance number (ports will be offset by this amount)'
+        help="Instance number (ports will be offset by this amount)",
     )
     parser.add_argument(
-        '--cleanup-only',
-        action='store_true',
-        help='Only clean up temporary files for the instance'
+        "--cleanup-only",
+        action="store_true",
+        help="Only clean up temporary files for the instance",
     )
     parser.add_argument(
-        'compose_args',
-        nargs='*',
-        default=['up', '-d'],
-        help='Arguments to pass to docker-compose (default: up -d)'
+        "compose_args",
+        nargs="*",
+        default=["up", "-d"],
+        help="Arguments to pass to docker-compose (default: up -d)",
     )
 
     args = parser.parse_args()
@@ -203,7 +212,7 @@ def main():
         result = run_docker_compose(args.instance, args.compose_args)
 
         # If the command was 'down', cleanup temp files
-        if 'down' in args.compose_args:
+        if "down" in args.compose_args:
             cleanup_temp_files(args.instance)
 
         sys.exit(result.returncode)
@@ -218,5 +227,5 @@ def main():
         sys.exit(1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

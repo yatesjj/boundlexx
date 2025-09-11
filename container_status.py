@@ -15,18 +15,18 @@ def check_container_status():
     repo_dir = Path(__file__).resolve().parent
     folder_name = repo_dir.name
 
-    compose_file = repo_dir / 'docker-compose.yml'
-    override_file = repo_dir / 'docker-compose.override.yml'
-    env_file = repo_dir / '.env'
+    compose_file = repo_dir / "docker-compose.yml"
+    override_file = repo_dir / "docker-compose.override.yml"
+    env_file = repo_dir / ".env"
 
     print(f"Container Status for '{folder_name}'")
     print("=" * 50)
 
     # Check if files exist
     files_status = {
-        'docker-compose.yml': compose_file.exists(),
-        'docker-compose.override.yml': override_file.exists(),
-        '.env': env_file.exists()
+        "docker-compose.yml": compose_file.exists(),
+        "docker-compose.override.yml": override_file.exists(),
+        ".env": env_file.exists(),
     }
 
     print("Files present:")
@@ -42,7 +42,7 @@ def check_container_status():
     compose_content = compose_file.read_text()
 
     # Look for container names
-    container_names = re.findall(r'container_name:\s*([\w-]+)', compose_content)
+    container_names = re.findall(r"container_name:\s*([\w-]+)", compose_content)
 
     print(f"\nContainer Names Found ({len(container_names)}):")
     has_prefixes = False
@@ -62,7 +62,9 @@ def check_container_status():
 
     print(f"\nPort Mappings Found ({len(ports_found)}):")
     for host_port, container_port in ports_found:
-        offset = int(host_port) - int(container_port) if host_port != container_port else 0
+        offset = (
+            int(host_port) - int(container_port) if host_port != container_port else 0
+        )
         offset_info = f" (+{offset})" if offset > 0 else ""
         print(f"  📡 {host_port}:{container_port}{offset_info}")
 
@@ -78,7 +80,7 @@ def check_container_status():
         print("  ❓ Mixed/custom configuration")
 
     # Check for parallel test files
-    parallel_files = list(repo_dir.glob('*.instance*'))
+    parallel_files = list(repo_dir.glob("*.instance*"))
     if parallel_files:
         print(f"\nParallel Test Files ({len(parallel_files)}):")
         for pfile in parallel_files:
@@ -95,11 +97,11 @@ def check_container_status():
 
 def main():
     parser = argparse.ArgumentParser(
-        description='Check container management configuration status'
+        description="Check container management configuration status"
     )
     args = parser.parse_args()
     check_container_status()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

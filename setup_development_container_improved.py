@@ -29,26 +29,26 @@ def setup_development_containers(dry_run=False, prefix=None):
 
     # Files to update
     compose_files = [
-        repo_dir / 'docker-compose.yml',
-        repo_dir / 'docker-compose.override.yml',
+        repo_dir / "docker-compose.yml",
+        repo_dir / "docker-compose.override.yml",
     ]
-    env_file = repo_dir / '.env'
+    env_file = repo_dir / ".env"
 
     # Only prefix names, do not change ports
-    name_pattern = re.compile(r'(container_name|service|network|name):\s*([\w-]+)')
+    name_pattern = re.compile(r"(container_name|service|network|name):\s*([\w-]+)")
 
     def prefix_name(match):
         key, value = match.groups()
         if value.startswith(folder_name):
             return match.group(0)
-        return f'{key}: {folder_name}-{value}'
+        return f"{key}: {folder_name}-{value}"
 
     def update_yaml_file(path):
         if not path.exists():
             print(f"Warning: {path} does not exist, skipping...")
             return
 
-        text = path.read_text(encoding='utf-8')
+        text = path.read_text(encoding="utf-8")
         original_text = text
 
         # Only prefix names
@@ -60,25 +60,25 @@ def setup_development_containers(dry_run=False, prefix=None):
             else:
                 print(f"No changes needed for {path}")
         else:
-            path.write_text(text, encoding='utf-8')
-            print(f'Updated {path}')
+            path.write_text(text, encoding="utf-8")
+            print(f"Updated {path}")
 
     def update_env_file(path):
         if not path.exists():
             print(f"Warning: {path} does not exist, skipping...")
             return
 
-        lines = path.read_text(encoding='utf-8').splitlines()
+        lines = path.read_text(encoding="utf-8").splitlines()
         new_lines = []
         changes_made = False
 
         for line in lines:
             # Only prefix names in env vars
-            m2 = re.match(r'([A-Z_]+)=(.+)', line)
+            m2 = re.match(r"([A-Z_]+)=(.+)", line)
             if m2 and not m2.group(2).startswith(folder_name):
                 key, value = m2.groups()
-                if 'NAME' in key or 'SERVICE' in key or 'NETWORK' in key:
-                    new_lines.append(f'{key}={folder_name}-{value}')
+                if "NAME" in key or "SERVICE" in key or "NETWORK" in key:
+                    new_lines.append(f"{key}={folder_name}-{value}")
                     changes_made = True
                     continue
             new_lines.append(line)
@@ -89,8 +89,8 @@ def setup_development_containers(dry_run=False, prefix=None):
             else:
                 print(f"No changes needed for {path}")
         else:
-            path.write_text('\n'.join(new_lines) + '\n', encoding='utf-8')
-            print(f'Updated {path}')
+            path.write_text("\n".join(new_lines) + "\n", encoding="utf-8")
+            print(f"Updated {path}")
 
     # Process files
     for f in compose_files:
@@ -98,29 +98,33 @@ def setup_development_containers(dry_run=False, prefix=None):
     update_env_file(env_file)
 
     if not dry_run:
-        print(f'All done! Development container is now unique to "{folder_name}" and uses original ports.')
+        print(
+            f'All done! Development container is now unique to "{folder_name}" and uses original ports.'
+        )
     else:
-        print(f'Dry run complete. Would configure development container for "{folder_name}".')
+        print(
+            f'Dry run complete. Would configure development container for "{folder_name}".'
+        )
 
 
 def main():
     parser = argparse.ArgumentParser(
-        description='Set up development container with folder-prefixed names and original ports'
+        description="Set up development container with folder-prefixed names and original ports"
     )
     parser.add_argument(
-        '--dry-run',
-        action='store_true',
-        help='Show what would be changed without making any modifications'
+        "--dry-run",
+        action="store_true",
+        help="Show what would be changed without making any modifications",
     )
     parser.add_argument(
-        '--prefix',
+        "--prefix",
         type=str,
-        help='Custom prefix for container names (default: auto-detect from git or folder)'
+        help="Custom prefix for container names (default: auto-detect from git or folder)",
     )
 
     args = parser.parse_args()
     setup_development_containers(dry_run=args.dry_run, prefix=args.prefix)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
