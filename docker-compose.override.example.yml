@@ -1,44 +1,65 @@
 services:
-    django: &django
+  django: &django
     ## enable .local.env file
-      env_file:
-        - ./.env
-        - ./.local.env
-      ports:
-        - "28000:8000"
-      volumes:
-        - .:/app
-        ## Replace with path to your Boundless install
-        - C:\Program Files\Steam\steamapps\common\Boundless:/boundless
-        ## Replace with path to you out folder for `boundless_icon_render`
-        - /path/to/boundless_icon_render/out:/boundless-icons
+    container_name: django
+    env_file:
+      - ./.env
+      - ./.local.env
+    ports:
+      - "28000:8000"
+    volumes:
+      - .:/app
+      ## Replace with path to your Boundless install
+      - C:\Program Files\Steam\steamapps\common\Boundless:/boundless
+      ## Replace with path to you out folder for `boundless_icon_render`
+      - /path/to/boundless_icon_render/out:/boundless-icons
 
-    manage:
-      <<: *django
-      ports: []
+  manage:
+    <<: *django
+    container_name: manage
+    ports: []
 
-    test:
-      <<: *django
-      ports: []
+  test:
+    <<: *django
+    container_name: test
+    ports: []
 
-    lint:
-      <<: *django
-      ports: []
+  lint:
+    <<: *django
+    container_name: lint
+    ports: []
 
-    format:
-      <<: *django
-      ports: []
+  format:
+    <<: *django
+    container_name: format
+    ports: []
 
-    celery:
-      <<: *django
-      ports: []
+  celery:
+    <<: *django
+    container_name: celery
+    ports: []
 
-    celerybeat:
-      <<: *django
-      ports: []
+  celerybeat:
+    <<: *django
+    container_name: celerybeat
+    ports: []
 
-    postgres:
+  huey-consumer:
+    <<: *django
+    container_name: huey-consumer
+    ports: []
+
+  huey-scheduler:
+    <<: *django
+    container_name: huey-scheduler
+    ports: []
+
+  postgres:
     ## enable .local.env file
-      env_file:
-        - ./.env
-        - ./.local.env
+    container_name: postgres
+    env_file:
+      - ./.env
+      - ./.local.env
+
+  redis:
+    container_name: redis

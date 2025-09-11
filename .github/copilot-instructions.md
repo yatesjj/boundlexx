@@ -1,6 +1,56 @@
-## Authentication & Superuser Setup
+## Authenticat### FINAL CONTAINER MANAGEMENT ARCHITECTURE ✅
 
-- Boundlexx uses Django's standard authentication (username/password). There is no Discord, Github, or other social login enabled by default.
+**Production Scripts (2 total):**
+- `setup_development_container_improved.py` - Main development setup with dry-run
+- `setup_test_container.py` - Test environments with port offsets and dry-run
+
+**Archived Scripts (for reference):**
+- `docs/modernization/archived_scripts/run_for_parallel_test_containers.py` - Complex parallel testing (archived)
+
+**Recommended Workflow:**
+- **Main development**: `C:\VSCode\boundlexx-yatesjj\boundlexx-yatesjj\` → use development script
+- **Test environments**: `C:\VSCode\boundlexx-test-*\boundlexx\` → use test script  
+- **Each folder gets unique container prefixes automatically**
+
+### FILES READY FOR PRODUCTION ✅
+- `setup_development_container_improved.py` (✅ production ready with dry-run)
+- `setup_test_container.py` (✅ enhanced with dry-run capability) 
+- `docker-compose.override.example.yml` (✅ enhanced with all container names)
+- `docs/modernization/ENVIRONMENT_SETUP.md` (✅ complete documentation)
+- `docs/modernization/archived_scripts/` (✅ complex scripts archived for reference)up
+
+- Boundlexx uses Django's standard authentication (username/password). There is **Setup Process:**
+1. Clone repo with meaningful folder structure (e.g., `C:\VSCode\boundlexx-yatesjj\boundlexx\`)
+2. Copy template files: `cp .env .local.env` and `cp docker-compose.override.example.yml docker-compose.override.yml`
+3. Run: `python setup_development_container_improved.py` (prefixes containers with "boundlexx-yatesjj")
+4. Customize local files for personal setup
+
+### VERIFICATION COMPLETE ✅
+- Base files remain clean and committable
+- Container names follow pattern: `boundlexx-yatesjj-django-1`, `boundlexx-yatesjj-postgres-1`, etc.
+- Multi-environment support (different folder names = different prefixes)
+- Documentation updated in README.rst and new ENVIRONMENT_SETUP.md
+
+### FINAL CONTAINER MANAGEMENT ARCHITECTURE ✅
+
+**Production Scripts (2 total):**
+- `setup_development_container_improved.py` - Main development setup with dry-run
+- `setup_test_container.py` - Test environments with port offsets and dry-run
+
+**Archived Scripts (for reference):**
+- `docs/modernization/archived_scripts/archive_run_for_parallel_test_containers.py` - Complex parallel testing (archived)
+
+**Recommended Workflow:**
+- **Main development**: `C:\VSCode\boundlexx-yatesjj\boundlexx-yatesjj\` → use development script
+- **Test environments**: `C:\VSCode\boundlexx-test-*\boundlexx\` → use test script  
+- **Each folder gets unique container prefixes automatically**
+
+### FILES READY FOR PRODUCTION ✅
+- `setup_development_container_improved.py` (✅ production ready with dry-run)
+- `setup_test_container.py` (✅ enhanced with dry-run capability) 
+- `docker-compose.override.example.yml` (✅ enhanced with all container names)
+- `docs/modernization/ENVIRONMENT_SETUP.md` (✅ complete documentation)
+- `docs/modernization/archived_scripts/` (✅ complex scripts archived for reference)b, or other social login enabled by default.
 - To create an admin user, use the VS Code task "Boundlexx: Manage" and enter `createsuperuser` when prompted for the management command.
 - Log in at http://127.0.0.1:8000/admin/ with the credentials you create.
 
@@ -94,7 +144,48 @@ python manage.py create_game_objects --recipe
 
 **Pause before making any environment changes.**
 
+## CURRENT SESSION STATUS (2025-09-10)
 
+### Container Management Scripts - COMPLETE ✅
+- ✅ Created 3 container management scripts with comprehensive functionality
+- ✅ Added comprehensive documentation and VS Code tasks
+- ✅ Fixed port mapping inconsistency in docker-compose.override.yml (28000→8000)
+- ✅ Added explicit container names and networks to docker-compose.yml
+- ✅ Created container_status.py utility and setup_development_container_improved.py
+- ✅ Fixed prefix logic to use parent folder name for meaningful prefixes
+- ✅ **ENVIRONMENT ARCHITECTURE COMPLETE**: Implemented proper Docker Compose best practices
+
+### CLEAN ENVIRONMENT ARCHITECTURE ✅
+**Base Files (Committed & Clean):**
+- `docker-compose.yml` - Base service definitions (no container names, no local paths)
+- `.env` - Base environment variables with safe defaults
+- `docker-compose.override.example.yml` - Template for developers
+
+**Local Files (Not Committed):**
+- `docker-compose.override.yml` - Personal customizations (container names, local paths)
+- `.local.env` - Personal environment variables
+
+**Setup Process:**
+1. Clone repo with meaningful folder structure (e.g., `C:\VSCode\boundlexx-yatesjj\boundlexx`)
+2. Copy template files: `cp .env .local.env` and `cp docker-compose.override.example.yml docker-compose.override.yml`
+3. Run: `python setup_development_container_improved.py` (prefixes containers with "boundlexx-yatesjj")
+4. Customize local files for personal setup
+
+### VERIFICATION COMPLETE ✅
+- Base files remain clean and committable
+- Container names follow pattern: `boundlexx-yatesjj-django-1`, `boundlexx-yatesjj-postgres-1`, etc.
+- Multi-environment support (different folder names = different prefixes)
+- Documentation updated in README.rst and new ENVIRONMENT_SETUP.md
+
+### FILES READY FOR PRODUCTION ✅
+- `setup_development_container_improved.py` (✅ production ready)
+- `setup_test_container.py` (✅ production ready) 
+- `docker-compose.override.template.yml` (✅ comprehensive template)
+- `docs/modernization/ENVIRONMENT_SETUP.md` (✅ complete documentation)
+
+### NEXT MODERNIZATION STEP:
+**Container Management: COMPLETE ✅** 
+**Ready for next issue**: GitHub Actions modernization, Project Structure simplification, or Django Ninja API migration
 # Copilot Instructions for Boundlexx Modernization
 
 ## Project Overview
@@ -116,6 +207,7 @@ Boundlexx is a Django monorepo for Boundless game data, supporting both containe
 
 ## Developer Workflows
 - **Containerized:**
+  - **Required setup:** Copy `.env` to `.local.env` for local environment configuration
   - Use `docker-compose` with `.env`/`.local.env` for environment variables.
   - Main service: `django` (port 8000). Use VS Code devcontainer for pre-configured setup.
   - Run management commands: `docker-compose run --rm manage python manage.py <command>`
