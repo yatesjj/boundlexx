@@ -98,13 +98,13 @@ Expected output: `boundlexx-yatesjj-django-1`, `boundlexx-yatesjj-postgres-1`, e
 
    .. code-block:: bash
 
-      python manage.py runserver 0.0.0.0:8000
+      python manage.py runserver 0.0.0.0:28000
 
-#. The site will be available at http://127.0.0.1:8000 on your host machine.
+#. The site will be available at http://127.0.0.1:28000 on your host machine.
 
 **User and Data Setup:**
 
-#. Open http://127.0.0.1:8000 in your web browser. The main site and API will be available, but to access the admin or create users, you must create a Django superuser.
+#. Open http://127.0.0.1:28000 in your web browser. The main site and API will be available, but to access the admin or create users, you must create a Django superuser.
 #. In VS Code, open the Command Palette (`Ctrl+Shift+P` or `Cmd+Shift+P` on Mac) and select "Tasks: Run Task".
 #. Choose "Boundlexx: Manage" from the list. When prompted for the management command, enter `createsuperuser` and follow the prompts to set up your admin user.
 
@@ -127,56 +127,43 @@ Expected output: `boundlexx-yatesjj-django-1`, `boundlexx-yatesjj-postgres-1`, e
 
 #. If you encounter a KeyError or missing data error during this step (e.g., `Skill.DoesNotExist: Decoration Crafting`), ensure you ran the skills import first before attempting recipes.
 
-#. After these steps, your Boundlexx instance should be ready for use and development. To log in as an admin, visit http://127.0.0.1:8000/admin/ and use the credentials you created.
+#. After these steps, your Boundlexx instance should be ready for use and development. To log in as an admin, visit http://127.0.0.1:28000/admin/ and use the credentials you created.
 
 Container Management Scripts
 ----------------------------
 
-The project includes scripts to help manage different container environments with automatic prefixing and port management:
+The project includes automated scripts for managing Docker container environments:
 
-**Development Container Setup:**
-
-* `setup_development_container_improved.py` - Sets up main development environment with folder-based container name prefixes (e.g., `boundlexx-yatesjj-django`). Uses original ports (8000, 5432, 6379). Supports `--dry-run` for testing changes.
-
-**Test Container Setup:**
-
-* `setup_test_container.py` - Creates test environments with port offsets (+1) and prefixed names for parallel testing alongside development. Test containers use ports 8001, 5433, 6380, etc. Supports `--dry-run` for testing changes.
-
-**Container Status:**
-
-* `container_status.py` - Utility script to check current container configuration and status.
+**Development Setup:**
 
 .. code-block:: bash
 
+   # Copy template files to create your local versions  
+   cp .env .local.env
+   cp docker-compose.override.example.yml docker-compose.override.yml
+   
    # Set up development container (original ports, folder-prefixed names)
    python setup_development_container_improved.py
    
    # Optional: preview changes first
    python setup_development_container_improved.py --dry-run
 
-   # Set up test container (offset ports +1, folder-prefixed names)  
-   python setup_test_container.py
-   
-   # Check container status
-   python container_status.py
-
-**Testing Workflow:**
-
-For testing container changes, clone to a separate location and use the test script:
+**Test Environment Setup:**
 
 .. code-block:: bash
 
-   # Clone to test location
-   git clone https://github.com/yatesjj/boundlexx.git C:\\VSCode\\boundlexx-test-1\\boundlexx
-   cd C:\\VSCode\\boundlexx-test-1\\boundlexx
-   
-   # Setup and test
-   cp .env .local.env
-   cp docker-compose.override.example.yml docker-compose.override.yml
-   python setup_test_container.py --dry-run
+   # Set up test container (Django on port 28001, folder-prefixed names)  
    python setup_test_container.py
    
-   # Cleanup when done
-   docker-compose down && cd .. && rm -rf boundlexx-test-1
+   # Optional: preview changes first
+   python setup_test_container.py --dry-run
 
-See `docs/modernization/ENVIRONMENT_SETUP.md` for detailed setup and testing workflows.
+**Container Status:**
+
+.. code-block:: bash
+
+   # Check container status
+   python container_status.py
+
+**For detailed setup instructions, troubleshooting, and advanced workflows, see:**
+`docs/modernization/ENVIRONMENT_SETUP.md`

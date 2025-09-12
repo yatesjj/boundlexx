@@ -18,7 +18,12 @@ cp .env .local.env
 cp docker-compose.override.example.yml docker-compose.override.yml
 ```p
 
-This document outlines the best practices for setting up a clean, customizable development environment.
+# Boundlexx Environment Setup - Complete Technical Guide
+
+This document provides comprehensive technical documentation for setting up, configuring, and troubleshooting Boundlexx development and test environments.
+
+**For quick setup, see:** `README.rst`  
+**For project tracking, see:** `MODERNIZATION_TRACKING.md`
 
 ## 🏗️ Architecture Overview
 
@@ -47,11 +52,22 @@ cp .env .local.env
 cp docker-compose.override.example.yml docker-compose.override.yml
 ```
 
-### Step 3: Run Development Container Setup
-```bash
-# This will prefix all container names with your folder name
-python setup_development_container_improved.py
-```
+
+### Step 3: Run the Appropriate Setup Script (**Never Both in the Same Folder!**)
+
+> **⚠️ IMPORTANT:**
+> Only run ONE setup script per environment/folder:
+> - For main development, run:
+>   ```bash
+>   python setup_development_container_improved.py
+>   ```
+> - For test/PR/parallel environments, run:
+>   ```bash
+>   python setup_test_container.py
+>   ```
+> **Never run both scripts in the same folder.** Each script configures container names and port mappings for its specific use case. Running both in one folder will cause conflicts.
+
+This will prefix all container names with your folder name and set the correct port mapping for your environment.
 
 ### Step 4: Customize Your Local Environment
 Edit `.local.env` and `docker-compose.override.yml` for your specific setup:
@@ -81,7 +97,7 @@ docker ps --format "table {{.Names}}\t{{.Image}}\t{{.Ports}}"
 Expected output:
 ```
 NAMES                           IMAGE                PORTS
-boundlexx-yatesjj-django-1      boundlexx_dev_django 8000/tcp
+boundlexx-yatesjj-django-1      boundlexx_dev_django 28000/tcp
 boundlexx-yatesjj-postgres-1    boundlexx_postgres   5432/tcp
 boundlexx-yatesjj-redis-1       redis:5.0            6379/tcp
 ```
@@ -163,7 +179,7 @@ When making changes to container management scripts or Docker configuration, fol
    # Start test environment
    docker-compose up -d
    
-   # Check containers (should see offset ports like 8001, 5433, 6380)
+   # Check containers (should see Django on port 28001, others internal)
    docker ps --format "table {{.Names}}\t{{.Ports}}"
    
    # Verify no conflicts with main development
@@ -175,8 +191,8 @@ When making changes to container management scripts or Docker configuration, fol
    # Test database connection
    docker-compose run --rm manage dbshell
    
-   # Test web application (should be on port 8001)
-   curl http://127.0.0.1:8001
+   # Test web application (should be on port 28001)
+   curl http://127.0.0.1:28001
    ```
 
 5. **Cleanup:**
@@ -194,9 +210,9 @@ When making changes to container management scripts or Docker configuration, fol
 
 | Environment Type | Container Names | Ports | Script | Use Case |
 |-----------------|----------------|-------|--------|----------|
-| **Main Development** | `boundlexx-yatesjj-*` | 8000, 5432, 6379 | `setup_development_container_improved.py` | Daily development work |
-| **Test Environment** | `boundlexx-test-1-*` | 8001, 5433, 6380 | `setup_test_container.py` | Testing changes, PR verification |
-| **Experiment** | `boundlexx-experiment-*` | 8000, 5432, 6379 | `setup_development_container_improved.py` | Feature experiments |
+| **Main Development** | `boundlexx-yatesjj-*` | Django: 28000, Others: internal | `setup_development_container_improved.py` | Daily development work |
+| **Test Environment** | `boundlexx-test-1-*` | Django: 28001, Others: internal | `setup_test_container.py` | Testing changes, PR verification |
+| **Experiment** | `boundlexx-experiment-*` | Django: 28000, Others: internal | `setup_development_container_improved.py` | Feature experiments |
 
 ### Benefits of Test Environment Approach:
 - ✅ **Safe testing** - No risk to main development data
@@ -204,3 +220,101 @@ When making changes to container management scripts or Docker configuration, fol
 - ✅ **Quick setup** - Standardized testing workflow
 - ✅ **Easy cleanup** - Complete environment removal in one command
 - ✅ **Parallel development** - Run main and test environments simultaneously
+
+## 📊 Container Management Scripts Reference
+
+### Available Scripts
+
+| Script | Purpose | Port Strategy | Container Names | Use Case |
+|--------|---------|---------------|-----------------|----------|
+| `setup_development_container_improved.py` | Main development | Django: 28000, Others: internal | `{folder}-django-1`, `{folder}-postgres-1` | Daily development |
+| `setup_test_container.py` | Test environments | Django: 28001, Others: internal | `{folder}-django-1`, `{folder}-postgres-1` | PR testing, parallel dev |
+| `container_status.py` | Status monitoring | N/A | N/A | Check current setup |
+
+### Port Mapping Details
+
+**Development Environment (Original Upstream Ports):**
+- **Django:** `28000:8000` (external access)
+- **PostgreSQL:** Internal only (`5432`)
+- **Redis:** Internal only (`6379`) 
+- **MailHog:** Internal only (`8025`)
+
+**Test Environment (+1 Django Port, Others Internal):**
+- **Django:** `28001:8000` (external access)
+- **PostgreSQL:** Internal only (`5432`)
+- **Redis:** Internal only (`6379`)
+- **MailHog:** Internal only (`8025`)
+
+### Folder-Based Automatic Naming
+
+Both scripts automatically detect your parent folder name and use it as the container prefix:
+
+```bash
+C:\VSCode\boundlexx-yatesjj\boundlexx\     → boundlexx-yatesjj-django-1
+C:\VSCode\boundlexx-test-pr3\boundlexx\    → boundlexx-test-pr3-django-1  
+C:\VSCode\boundlexx-experiment\boundlexx\  → boundlexx-experiment-django-1
+```
+
+This ensures:
+- ✅ **Unique container names** across all environments
+- ✅ **Clear identification** of which environment containers belong to
+- ✅ **No naming conflicts** when running multiple environments
+- ✅ **Automatic network isolation** with prefixed network names
+
+## 🔧 Troubleshooting
+
+### Common Issues
+
+**Issue: "Container name already exists"**
+```bash
+# Solution: Check for existing containers
+docker ps -a --filter name=boundlexx
+
+# Remove conflicting containers
+docker rm -f container-name-here
+```
+
+**Issue: "Port already in use"**  
+```bash
+# Solution: Check what's using the port
+netstat -an | findstr 28000
+
+# Or use different folder names for different environments
+```
+
+**Issue: "Permission denied" on Windows**
+```bash
+# Solution: Ensure Docker Desktop is running and has proper permissions
+# Check Windows volume sharing settings in Docker Desktop
+```
+
+**Issue: "No such file docker-compose.yml"**
+```bash
+# Solution: Ensure you're in the project root directory
+ls docker-compose.yml  # Should exist
+```
+
+### Script Debugging
+
+All scripts support `--dry-run` for safe testing:
+
+```bash
+# Preview what would happen without making changes
+python setup_development_container_improved.py --dry-run
+python setup_test_container.py --dry-run
+```
+
+### Container Network Architecture
+
+Each environment creates its own Docker network:
+
+```bash
+# Main development
+boundlexx-yatesjj-network
+
+# Test environments  
+boundlexx-test-1-network
+boundlexx-test-pr3-network
+```
+
+This provides complete network isolation between environments while allowing all services within each environment to communicate internally.
