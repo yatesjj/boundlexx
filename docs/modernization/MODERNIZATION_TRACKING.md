@@ -40,6 +40,12 @@
   - Restore archived script from `docs/modernization/archived_scripts/` if needed
   - Revert changes to `docker-compose.override.example.yml` and documentation files
   - Remove `docs/modernization/ENVIRONMENT_SETUP.md` and related documentation
+- **Testing Workflow Established:**
+  - Clone to separate test location (e.g., `C:\VSCode\boundlexx-test-1\boundlexx`)
+  - Use `setup_test_container.py` for port-offset test environments
+  - Automatic container prefixing prevents conflicts with main development
+  - Complete isolation enables safe testing without affecting production data
+  - Documented in `docs/modernization/ENVIRONMENT_SETUP.md` and README.rst
 
 # Boundlexx Modernization & Migration Tracking Log
 

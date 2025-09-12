@@ -186,6 +186,63 @@ python manage.py create_game_objects --recipe
 ### NEXT MODERNIZATION STEP:
 **Container Management: COMPLETE ✅** 
 **Ready for next issue**: GitHub Actions modernization, Project Structure simplification, or Django Ninja API migration
+
+## CONTAINER TESTING WORKFLOW
+
+### Testing Container Management Scripts
+When testing container management changes or new environments:
+
+1. **Clone to Test Location:**
+   ```sh
+   git clone https://github.com/yatesjj/boundlexx.git C:\VSCode\boundlexx-test-1\boundlexx
+   cd C:\VSCode\boundlexx-test-1\boundlexx
+   ```
+
+2. **Setup Test Environment:**
+   ```sh
+   # Copy template files
+   cp .env .local.env
+   cp docker-compose.override.example.yml docker-compose.override.yml
+   
+   # Run test container setup (creates boundlexx-test-1-* containers with port offsets)
+   python setup_test_container.py
+   
+   # Optional: Dry run first
+   python setup_test_container.py --dry-run
+   ```
+
+3. **Verify Test Environment:**
+   ```sh
+   # Check container names and ports
+   python container_status.py
+   
+   # Start services (should use offset ports like 8001 instead of 8000)
+   docker-compose up -d
+   
+   # Verify no conflicts with main development environment
+   docker ps
+   ```
+
+4. **Test Workflow:**
+   - Test container scripts work correctly
+   - Verify unique container names and port offsets
+   - Confirm no conflicts with existing development environment
+   - Test database migrations and basic functionality
+
+5. **Cleanup After Testing:**
+   ```sh
+   # Stop and remove test containers
+   docker-compose down
+   docker system prune -f
+   
+   # Remove test folder when done
+   rm -rf C:\VSCode\boundlexx-test-1
+   ```
+
+### Development vs Test Environment Summary:
+- **Development:** `boundlexx-yatesjj-*` containers, original ports (8000, 5432, 6379)
+- **Test:** `boundlexx-test-1-*` containers, offset ports (8001, 5433, 6380)
+- **Scripts:** `setup_development_container_improved.py` vs `setup_test_container.py`
 # Copilot Instructions for Boundlexx Modernization
 
 ## Project Overview

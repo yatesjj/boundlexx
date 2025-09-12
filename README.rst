@@ -98,13 +98,13 @@ Expected output: `boundlexx-yatesjj-django-1`, `boundlexx-yatesjj-postgres-1`, e
 
    .. code-block:: bash
 
-      python manage.py runserver 0.0.0.0:8000
+      python manage.py runserver 0.0.0.0:28000
 
-#. The site will be available at http://127.0.0.1:8000 on your host machine.
+#. The site will be available at http://127.0.0.1:28000 on your host machine.
 
 **User and Data Setup:**
 
-#. Open http://127.0.0.1:8000 in your web browser. The main site and API will be available, but to access the admin or create users, you must create a Django superuser.
+#. Open http://127.0.0.1:28000 in your web browser. The main site and API will be available, but to access the admin or create users, you must create a Django superuser.
 #. In VS Code, open the Command Palette (`Ctrl+Shift+P` or `Cmd+Shift+P` on Mac) and select "Tasks: Run Task".
 #. Choose "Boundlexx: Manage" from the list. When prompted for the management command, enter `createsuperuser` and follow the prompts to set up your admin user.
 
@@ -127,38 +127,43 @@ Expected output: `boundlexx-yatesjj-django-1`, `boundlexx-yatesjj-postgres-1`, e
 
 #. If you encounter a KeyError or missing data error during this step (e.g., `Skill.DoesNotExist: Decoration Crafting`), ensure you ran the skills import first before attempting recipes.
 
-#. After these steps, your Boundlexx instance should be ready for use and development. To log in as an admin, visit http://127.0.0.1:8000/admin/ and use the credentials you created.
+#. After these steps, your Boundlexx instance should be ready for use and development. To log in as an admin, visit http://127.0.0.1:28000/admin/ and use the credentials you created.
 
 Container Management Scripts
 ----------------------------
 
-The project includes several scripts to help manage different container environments:
+The project includes automated scripts for managing Docker container environments:
 
-**Development Container Setup:**
-
-* `setup_development_container.py` - Prefixes container names with folder name for clear identification as development environment. Uses original ports (8000, 5432, etc.)
-
-**Test Container Setup:**
-
-* `setup_test_container.py` - Sets up test containers with ports offset by +1 (8001, 5433, etc.) and prefixed names for parallel testing alongside development
-
-**Parallel Test Environments:**
-
-* `run_for_parallel_test_containers.py` - Dynamically creates multiple test instances with configurable port offsets for simultaneous testing
+**Development Setup:**
 
 .. code-block:: bash
 
-   # Set up development container (original ports)
-   python setup_development_container.py
+   # Copy template files to create your local versions  
+   cp .env .local.env
+   cp docker-compose.override.example.yml docker-compose.override.yml
+   
+   # Set up development container (original ports, folder-prefixed names)
+   python setup_development_container_improved.py
+   
+   # Optional: preview changes first
+   python setup_development_container_improved.py --dry-run
 
-   # Set up test container (ports +1)
+**Test Environment Setup:**
+
+.. code-block:: bash
+
+   # Set up test container (Django on port 28001, folder-prefixed names)  
    python setup_test_container.py
+   
+   # Optional: preview changes first
+   python setup_test_container.py --dry-run
 
-   # Run parallel test instance 1 (ports +1)
-   python run_for_parallel_test_containers.py --instance 1
+**Container Status:**
 
-   # Run parallel test instance 2 (ports +2)
-   python run_for_parallel_test_containers.py --instance 2
+.. code-block:: bash
 
-   # Stop and cleanup instance
-   python run_for_parallel_test_containers.py --instance 1 down
+   # Check container status
+   python container_status.py
+
+**For detailed setup instructions, troubleshooting, and advanced workflows, see:**
+`docs/modernization/ENVIRONMENT_SETUP.md`
