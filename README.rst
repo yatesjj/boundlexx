@@ -4,9 +4,12 @@ Boundlexx
 .. image:: https://img.shields.io/badge/built%20with-Cookiecutter%20Django-ff69b4.svg
      :target: https://github.com/pydanny/cookiecutter-django/
      :alt: Built with Cookiecutter Django
-.. image:: https://img.shields.io/badge/code%20style-black-000000.svg
-     :target: https://github.com/ambv/black
-     :alt: Black code style
+.. image:: https://img.shields.io/badge/code%20style-ruff-000000.svg
+     :target: https://github.com/astral-sh/ruff
+     :alt: Ruff code style
+.. image:: https://img.shields.io/badge/type%20checker-mypy-000000.svg
+     :target: https://mypy-lang.org/
+     :alt: mypy type checker
 
 
 :License: MIT
@@ -39,6 +42,16 @@ Remote Containers extension. It is recommend to use those. So make sure you have
 
 Setup
 -----
+
+**Modernization Note:**
+
+This fork is undergoing modernization guided by patterns from `ark-operator <https://github.com/AngellusMortis/ark-operator>`_, including simplified structure, updated dependencies, and improved CI/CD.
+
+**Project Structure:**
+
+- Main app: ``boundlexx/`` (flat, no nesting)
+- Configs: Centralized in ``pyproject.toml`` (in progress)
+- Scripts: Management tools in root (e.g., setup_*.py)
 
 **Quick Start for Development:**
 

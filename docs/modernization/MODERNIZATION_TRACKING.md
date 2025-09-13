@@ -20,21 +20,28 @@
 ## 2025-09-10: Container Management Scripts - COMPLETE ✅
 
 ### 1. Finalized Container Management System
-- **Description:** Implemented complete container management solution with two production-ready scripts: `setup_development_container_improved.py` (main development with dry-run capability) and `setup_test_container.py` (test environments with port offsets). Added `container_status.py` utility. Archived complex parallel testing script to `docs/modernization/archived_scripts/`.
-- **Rationale:** Provides clean, maintainable container management following Docker Compose best practices. Enables multi-environment development with automatic prefix detection from parent folder names (e.g., `boundlexx-yatesjj-django-1`). Separates base files (committed) from local customization files.
+- **Description:** Implemented complete container management solution with two production-ready scripts: `setup_development_container_improved.py` (main development with dry-run capability) and `setup_test_container.py` (enhanced test environments with automatic folder-based naming). Added `container_status.py` utility. Archived complex parallel testing script to `docs/modernization/archived_scripts/`.
+- **Rationale:** Provides clean, maintainable container management following Docker Compose best practices. Enables multi-environment development with automatic prefix detection from parent folder names (e.g., `boundlexx-yatesjj-test-PR3` → auto-detected prefixes). Separates base files (committed) from local customization files. Port 28000 base aligned with upstream repository.
 - **Files Changed:**
   - `setup_development_container_improved.py` (production ready with argument parsing)
-  - `setup_test_container.py` (enhanced with dry-run capability)
+  - `setup_test_container.py` (FINAL - enhanced with folder-based auto-detection and clean override generation)
   - `container_status.py` (utility for container status checks)
   - `docker-compose.override.example.yml` (enhanced template with all container names)
   - `docs/modernization/ENVIRONMENT_SETUP.md` (comprehensive setup documentation)
   - `docs/modernization/archived_scripts/run_for_parallel_test_containers.py` (archived for reference)
-  - README.rst (updated container management workflow documentation)
+  - README.rst (updated with correct 28000 port base)
 - **Architecture Implemented:**
   - **Base files (committed):** `docker-compose.yml`, `.env`, `docker-compose.override.example.yml`
   - **Local files (personal):** `docker-compose.override.yml`, `.local.env`
   - **Setup process:** Copy template files, run setup script with automatic prefix detection
   - **Multi-environment support:** Different folder names create different container prefixes
+  - **Port strategy:** 28000 base for development, +1 offset for test environments (Django: 28001, others internal)
+- **Enhanced Test Container Features:**
+  - Automatic folder-based prefix detection from parent directory
+  - Clean override file generation instead of regex modifications
+  - Configurable port offsets (default: +1 for Django, others internal)
+  - Dry-run capability for safe preview before implementation
+  - Comprehensive error handling and user feedback
 - **How to Roll Back:**
   - Delete production scripts: `setup_development_container_improved.py`, `setup_test_container.py`, `container_status.py`
   - Restore archived script from `docs/modernization/archived_scripts/` if needed
@@ -42,10 +49,34 @@
   - Remove `docs/modernization/ENVIRONMENT_SETUP.md` and related documentation
 - **Testing Workflow Established:**
   - Clone to separate test location (e.g., `C:\VSCode\boundlexx-test-1\boundlexx`)
-  - Use `setup_test_container.py` for port-offset test environments
+  - Use `setup_test_container.py` for port-offset test environments (28000→28001)
   - Automatic container prefixing prevents conflicts with main development
   - Complete isolation enables safe testing without affecting production data
   - Documented in `docs/modernization/ENVIRONMENT_SETUP.md` and README.rst
+
+## 2025-09-11: Documentation Consolidation and Cleanup
+
+### 1. Archived Outdated Documentation
+- **Description:** Moved outdated container management docs to `docs/modernization/archived_scripts/docs/` and consolidated all technical information into a single comprehensive guide.
+- **Rationale:** Multiple overlapping docs created inconsistencies and maintenance burden. Consolidation ensures single source of truth and reduces errors.
+- **Files Archived:**
+  - `docs/modernization/CONTAINER_MANAGEMENT.md` → `docs/modernization/archived_scripts/docs/CONTAINER_MANAGEMENT.md`
+  - `docs/modernization/DEV_CONTAINER_CHANGELOG.md` → `docs/modernization/archived_scripts/docs/DEV_CONTAINER_CHANGELOG.md`
+- **Files Enhanced:**
+  - `README.rst` - Simplified to essential setup instructions with pointer to detailed docs
+  - `docs/modernization/ENVIRONMENT_SETUP.md` - Enhanced as comprehensive technical reference
+  - `.github/copilot-instructions.md` - Updated to reflect new documentation structure
+- **Documentation Architecture:**
+  - **README.rst** - Simple user-facing setup instructions
+  - **docs/modernization/ENVIRONMENT_SETUP.md** - Complete technical guide (single source of truth)
+  - **docs/modernization/MODERNIZATION_TRACKING.md** - Project tracking and change log
+- **Fixes Applied:**
+  - Corrected all port offset inconsistencies (+1 for Django, others internal)
+  - Updated script names and references throughout
+  - Removed duplicated testing workflow sections
+- **How to Roll Back:**
+  - Restore archived files from `docs/modernization/archived_scripts/docs/`
+  - Revert README.rst and ENVIRONMENT_SETUP.md changes
 
 # Boundlexx Modernization & Migration Tracking Log
 

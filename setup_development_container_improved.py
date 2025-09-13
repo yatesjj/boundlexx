@@ -1,130 +1,206 @@
 #!/usr/bin/env python3
 """
-setup_development_container.py
-
-Prefixes all service/container/network names with the current folder name for clear
-identification as the development container. Does not change any ports.
-
-Usage: Run this script from the root of your development repo after cloning or to
-reset names.
+Enhanced development container setup with folder-based naming.
+Creates docker-compose.override.yml with proper container names and
+original upstream ports.
 """
+
+import os
+import sys
 import argparse
-import re
 from pathlib import Path
 
 
-def setup_development_containers(dry_run=False, prefix=None):
-    """Set up development container with folder name prefixes."""
-    # Get current folder name for prefixing
-    repo_dir = Path(__file__).resolve().parent
+def get_folder_prefix():
+    """Get container prefix from parent folder name."""
+    current_dir = Path.cwd()
+    parent_folder = current_dir.parent.name
 
-    # Use provided prefix or derive from parent folder context
-    if prefix:
-        folder_name = prefix
+    # Use parent folder name as prefix (e.g., boundlexx-yatesjj)
+    if parent_folder and parent_folder != '/':
+        return parent_folder
     else:
-        # Use parent folder name for meaningful prefixes
-        # This handles user's workflow: C:\VSCode\boundlexx-yatesjj\boundlexx\
-        # where we want "boundlexx-yatesjj" as the prefix
-        folder_name = repo_dir.parent.name
+        # Fallback to current folder name
+        return current_dir.name
 
-    # Files to update
-    compose_files = [
-        repo_dir / "docker-compose.yml",
-        repo_dir / "docker-compose.override.yml",
-    ]
-    env_file = repo_dir / ".env"
 
-    # Only prefix names, do not change ports
-    name_pattern = re.compile(r"(container_name|service|network|name):\s*([\w-]+)")
+def create_development_environment(prefix, dry_run=False):
+    """Create development environment with unique container names and original ports."""
 
-    def prefix_name(match):
-        key, value = match.groups()
-        if value.startswith(folder_name):
-            return match.group(0)
-        return f"{key}: {folder_name}-{value}"
+    print(f"🛠️ Setting up development environment with prefix: {prefix}")
+    print(f"📁 Working directory: {Path.cwd()}")
+    print("🔢 Using original upstream ports (28000, 5432, 6379, 8025)")
 
-    def update_yaml_file(path):
-        if not path.exists():
-            print(f"Warning: {path} does not exist, skipping...")
-            return
+    # Create docker-compose.override.yml for development environment
+    override_content = f"""# Auto-generated development environment override
+# Prefix: {prefix}
+# Uses original upstream ports
 
-        text = path.read_text(encoding="utf-8")
-        original_text = text
+services:
+  django: &django
+    container_name: {prefix}-django-1
+    env_file:
+      - ./.env
+      - ./.local.env
+    ports:
+      - "28000:8000"
+    volumes:
+      - .:/app
+      ## Replace with path to your Boundless install
+      - C:\\Program Files\\Steam\\steamapps\\common\\Boundless:/boundless
+      ## Replace with path to your out folder for `boundless_icon_render`
+      - /path/to/boundless_icon_render/out:/boundless-icons
+    networks:
+      - {prefix}-network
 
-        # Only prefix names
-        text = name_pattern.sub(prefix_name, text)
+  manage:
+    <<: *django
+    container_name: {prefix}-manage-1
+    ports: []
+    networks:
+      - {prefix}-network
 
-        if dry_run:
-            if text != original_text:
-                print(f"Would update {path}")
-            else:
-                print(f"No changes needed for {path}")
-        else:
-            path.write_text(text, encoding="utf-8")
-            print(f"Updated {path}")
+  test:
+    <<: *django
+    container_name: {prefix}-test-1
+    ports: []
+    networks:
+      - {prefix}-network
 
-    def update_env_file(path):
-        if not path.exists():
-            print(f"Warning: {path} does not exist, skipping...")
-            return
+  lint:
+    <<: *django
+    container_name: {prefix}-lint-1
+    ports: []
+    networks:
+      - {prefix}-network
 
-        lines = path.read_text(encoding="utf-8").splitlines()
-        new_lines = []
-        changes_made = False
+  format:
+    <<: *django
+    container_name: {prefix}-format-1
+    ports: []
+    networks:
+      - {prefix}-network
 
-        for line in lines:
-            # Only prefix names in env vars
-            m2 = re.match(r"([A-Z_]+)=(.+)", line)
-            if m2 and not m2.group(2).startswith(folder_name):
-                key, value = m2.groups()
-                if "NAME" in key or "SERVICE" in key or "NETWORK" in key:
-                    new_lines.append(f"{key}={folder_name}-{value}")
-                    changes_made = True
-                    continue
-            new_lines.append(line)
+  celery:
+    <<: *django
+    container_name: {prefix}-celery-1
+    ports: []
+    networks:
+      - {prefix}-network
 
-        if dry_run:
-            if changes_made:
-                print(f"Would update {path}")
-            else:
-                print(f"No changes needed for {path}")
-        else:
-            path.write_text("\n".join(new_lines) + "\n", encoding="utf-8")
-            print(f"Updated {path}")
+  celerybeat:
+    <<: *django
+    container_name: {prefix}-celerybeat-1
+    ports: []
+    networks:
+      - {prefix}-network
 
-    # Process files
-    for f in compose_files:
-        update_yaml_file(f)
-    update_env_file(env_file)
+  huey-consumer:
+    <<: *django
+    container_name: {prefix}-huey-consumer-1
+    ports: []
+    networks:
+      - {prefix}-network
 
-    if not dry_run:
-        print(
-            f'All done! Development container is now unique to "{folder_name}" and uses original ports.'
-        )
-    else:
-        print(
-            f'Dry run complete. Would configure development container for "{folder_name}".'
-        )
+  huey-scheduler:
+    <<: *django
+    container_name: {prefix}-huey-scheduler-1
+    ports: []
+    networks:
+      - {prefix}-network
+
+  postgres:
+    container_name: {prefix}-postgres-1
+    env_file:
+      - ./.env
+      - ./.local.env
+    networks:
+      - {prefix}-network
+
+  redis:
+    container_name: {prefix}-redis-1
+    networks:
+      - {prefix}-network
+
+  mailhog:
+    container_name: {prefix}-mailhog-1
+    networks:
+      - {prefix}-network
+
+networks:
+  {prefix}-network:
+    name: {prefix}-network
+    driver: bridge
+"""
+
+    # Show what would be created
+    print("\n📋 Development environment configuration:")
+    print("   Django: http://localhost:28000")
+    print("   PostgreSQL: internal only (port 5432)")
+    print("   Redis: internal only (port 6379)")
+    print("   MailHog: internal only (port 8025)")
+    print(f"   Network: {prefix}-network")
+
+    if dry_run:
+        print("\n🔍 DRY RUN - Would create docker-compose.override.yml:")
+        print("=" * 60)
+        print(override_content)
+        print("=" * 60)
+        return True
+
+    # Write the override file
+    try:
+        with open('docker-compose.override.yml', 'w') as f:
+            f.write(override_content)
+        print(f"✅ Created docker-compose.override.yml with {prefix} prefix")
+    except Exception as e:
+        print(f"❌ Error creating override file: {e}")
+        return False
+
+    return True
 
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Set up development container with folder-prefixed names and original ports"
+        description='Setup development environment with unique container names'
     )
     parser.add_argument(
-        "--dry-run",
-        action="store_true",
-        help="Show what would be changed without making any modifications",
+        '--prefix',
+        help='Container name prefix (auto-detected from folder if not specified)'
     )
     parser.add_argument(
-        "--prefix",
-        type=str,
-        help="Custom prefix for container names (default: auto-detect from git or folder)",
+        '--dry-run', action='store_true',
+        help='Show what would be created without making changes'
     )
 
     args = parser.parse_args()
-    setup_development_containers(dry_run=args.dry_run, prefix=args.prefix)
+
+    # Get prefix from folder name if not specified
+    if args.prefix:
+        prefix = args.prefix
+        print(f"📝 Using specified prefix: {prefix}")
+    else:
+        prefix = get_folder_prefix()
+        print(f"📁 Auto-detected prefix from folder: {prefix}")
+
+    # Validate we're in a boundlexx project
+    if not os.path.exists('docker-compose.yml'):
+        print("❌ Error: docker-compose.yml not found. "
+              "Are you in the boundlexx project root?")
+        sys.exit(1)
+
+    success = create_development_environment(prefix, args.dry_run)
+
+    if success:
+        if not args.dry_run:
+            print(f"\n🎉 Development environment '{prefix}' is ready!")
+            print("   Django: http://localhost:28000")
+            print("   Admin: http://localhost:28000/admin/")
+            print("   Edit docker-compose.override.yml to customize paths")
+        sys.exit(0)
+    else:
+        sys.exit(1)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

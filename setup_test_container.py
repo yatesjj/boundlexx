@@ -1,142 +1,183 @@
 #!/usr/bin/env python3
 """
-setup_test_container.py
-
-Automatically updates docker-compose.yml, docker-compose.override.yml, and .env to:
-- Offset all host ports by +1 (e.g., 8000→8001, 5432→5433)
-- Prefix all service/container/network names with the current folder name
-- Update environment variables referencing ports/names
-
-Usage: Run this script from the root of your cloned test repo after cloning.
+Enhanced test container setup with folder-based naming and dry-run capability.
+Automatically detects folder name and applies it as container prefix.
 """
+
+import os
+import sys
+import subprocess
 import argparse
-import re
 from pathlib import Path
 
 
-def setup_test_container(dry_run=False):
-    """Set up test container with port offsets and folder name prefixes."""
-    # Get current folder name for prefixing
-    repo_dir = Path(__file__).resolve().parent
-    folder_name = repo_dir.parent.name
+def get_folder_prefix():
+    """Get container prefix from parent folder name."""
+    current_dir = Path.cwd()
+    parent_folder = current_dir.parent.name
 
-    # Files to update
-    compose_files = [
-        repo_dir / "docker-compose.yml",
-        repo_dir / "docker-compose.override.yml",
-    ]
-    env_file = repo_dir / ".env"
-
-    # Regex patterns
-    port_pattern = re.compile(
-        r'(["\']?)(\d{4,5})(["\']?):(\d{4,5})'
-    )  # e.g., "8001:8000"
-    name_pattern = re.compile(r"(container_name|service|network|name):\s*([\w-]+)")
-
-    def offset_port(match):
-        prefix, host_port, suffix, container_port = match.groups()
-        try:
-            new_host_port = str(int(host_port) + 1)
-        except Exception:
-            new_host_port = host_port
-        return f"{prefix}{new_host_port}{suffix}:{container_port}"
-
-    def prefix_name(match):
-        key, value = match.groups()
-        if value.startswith(folder_name):
-            return match.group(0)
-        return f"{key}: {folder_name}-{value}"
-
-    def update_yaml_file(path):
-        if not path.exists():
-            print(f"Warning: {path} does not exist, skipping...")
-            return
-
-        text = path.read_text(encoding="utf-8")
-        original_text = text
-
-        # Offset ports
-        text = port_pattern.sub(offset_port, text)
-        # Prefix names
-        text = name_pattern.sub(prefix_name, text)
-
-        if dry_run:
-            if text != original_text:
-                print(f"Would update {path}")
-            else:
-                print(f"No changes needed for {path}")
-        else:
-            path.write_text(text, encoding="utf-8")
-            print(f"Updated {path}")
-
-    def update_env_file(path):
-        if not path.exists():
-            print(f"Warning: {path} does not exist, skipping...")
-            return
-
-        lines = path.read_text(encoding="utf-8").splitlines()
-        new_lines = []
-        changes_made = False
-
-        for line in lines:
-            # Offset port numbers in env vars
-            m = re.match(r"([A-Z_]+)=(\d{4,5})", line)
-            if m:
-                key, port = m.groups()
-                try:
-                    new_port = str(int(port) + 1)
-                    new_lines.append(f"{key}={new_port}")
-                    changes_made = True
-                    continue
-                except Exception:
-                    pass
-            # Prefix names in env vars
-            m2 = re.match(r"([A-Z_]+)=(.+)", line)
-            if m2 and not m2.group(2).startswith(folder_name):
-                key, value = m2.groups()
-                if "NAME" in key or "SERVICE" in key or "NETWORK" in key:
-                    new_lines.append(f"{key}={folder_name}-{value}")
-                    changes_made = True
-                    continue
-            new_lines.append(line)
-
-        if dry_run:
-            if changes_made:
-                print(f"Would update {path}")
-            else:
-                print(f"No changes needed for {path}")
-        else:
-            path.write_text("\n".join(new_lines) + "\n", encoding="utf-8")
-            print(f"Updated {path}")
-
-    # Process files
-    for f in compose_files:
-        update_yaml_file(f)
-    update_env_file(env_file)
-
-    if not dry_run:
-        print(
-            f'All done! Test container is now unique to "{folder_name}" with port offsets.'
-        )
+    # Use parent folder name as prefix (e.g., boundlexx-yatesjj-test-PR3)
+    if parent_folder and parent_folder != '/':
+        return parent_folder
     else:
-        print(
-            f'Dry run complete. Would configure test container for "{folder_name}" with port offsets.'
-        )
+        # Fallback to current folder name
+        return current_dir.name
+
+
+def create_test_environment(prefix, port_offset=1, dry_run=False):
+    """Create test environment with unique container names and ports."""
+
+    print(f"🧪 Setting up test environment with prefix: {prefix}")
+    print(f"📁 Working directory: {Path.cwd()}")
+    print(f"🔢 Port offset: {port_offset}")
+
+    # Define port mappings with offset (only Django needs external port)
+    django_port = 28000 + port_offset     # 28001 for first test env
+
+    # Create docker-compose.override.yml for test environment
+    override_content = f"""# Auto-generated test environment override
+# Prefix: {prefix}
+# Port offset: {port_offset}
+
+version: '3.8'
+
+services:
+  django:
+    container_name: {prefix}-django-1
+    ports:
+      - "{django_port}:8000"
+    networks:
+      - {prefix}-network
+
+  postgres:
+    container_name: {prefix}-postgres-1
+    networks:
+      - {prefix}-network
+
+  redis:
+    container_name: {prefix}-redis-1
+    networks:
+      - {prefix}-network
+
+  mailhog:
+    container_name: {prefix}-mailhog-1
+    networks:
+      - {prefix}-network
+
+  celery:
+    container_name: {prefix}-celery-1
+    networks:
+      - {prefix}-network
+
+  celerybeat:
+    container_name: {prefix}-celerybeat-1
+    networks:
+      - {prefix}-network
+
+  huey-consumer:
+    container_name: {prefix}-huey-consumer-1
+    networks:
+      - {prefix}-network
+
+  huey-scheduler:
+    container_name: {prefix}-huey-scheduler-1
+    networks:
+      - {prefix}-network
+
+networks:
+  {prefix}-network:
+    name: {prefix}-network
+    driver: bridge
+"""
+
+    # Show what would be created
+    print("\n📋 Test environment configuration:")
+    print(f"   Django: http://localhost:{django_port}")
+    print("   PostgreSQL: internal only (port 5432)")
+    print("   Redis: internal only (port 6379)")
+    print("   MailHog: internal only (port 8025)")
+    print(f"   Network: {prefix}-network")
+
+    if dry_run:
+        print("\n🔍 DRY RUN - Would create docker-compose.override.yml:")
+        print("=" * 60)
+        print(override_content)
+        print("=" * 60)
+        print("\n🔍 DRY RUN - Would run: docker-compose up -d")
+        return True
+
+    # Write the override file
+    try:
+        with open('docker-compose.override.yml', 'w') as f:
+            f.write(override_content)
+        print(f"✅ Created docker-compose.override.yml with {prefix} prefix")
+    except Exception as e:
+        print(f"❌ Error creating override file: {e}")
+        return False
+
+    # Start the containers
+    try:
+        print("\n🚀 Starting test containers...")
+        subprocess.run(['docker-compose', 'up', '-d'],
+                       check=True, capture_output=True, text=True)
+        print("✅ Test environment started successfully!")
+        django_url = f"http://localhost:{django_port}"
+        print(f"🌐 Access your test environment at: {django_url}")
+        return True
+    except subprocess.CalledProcessError as e:
+        print(f"❌ Error starting containers: {e}")
+        print(f"   stdout: {e.stdout}")
+        print(f"   stderr: {e.stderr}")
+        return False
 
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Set up test container with port offsets and folder-prefixed names"
+        description='Setup test environment with unique container names and ports'
     )
     parser.add_argument(
-        "--dry-run",
-        action="store_true",
-        help="Show what would be changed without making any modifications",
+        '--prefix',
+        help='Container name prefix (auto-detected from folder if not specified)'
+    )
+    parser.add_argument(
+        '--port-offset', type=int, default=1,
+        help='Port offset for test environment (default: 1)'
+    )
+    parser.add_argument(
+        '--dry-run', action='store_true',
+        help='Show what would be created without making changes'
     )
 
     args = parser.parse_args()
-    setup_test_container(dry_run=args.dry_run)
+
+    # Get prefix from folder name if not specified
+    if args.prefix:
+        prefix = args.prefix
+        print(f"📝 Using specified prefix: {prefix}")
+    else:
+        prefix = get_folder_prefix()
+        print(f"📁 Auto-detected prefix from folder: {prefix}")
+
+    # Validate we're in a boundlexx project
+    if not os.path.exists('docker-compose.yml'):
+        print("❌ Error: docker-compose.yml not found. "
+              "Are you in the boundlexx project root?")
+        sys.exit(1)
+
+    success = create_test_environment(prefix, args.port_offset, args.dry_run)
+
+    if success:
+        if not args.dry_run:
+            print(f"\n🎉 Test environment '{prefix}' is ready!")
+            print(f"   Django: http://localhost:{28000 + args.port_offset}")
+            print(f"   Admin: http://localhost:{28000 + args.port_offset}/admin/")
+            print("   PostgreSQL: internal only (port 5432)")
+            print("   Redis: internal only (port 6379)")
+            print("   MailHog: internal only (port 8025)")
+        sys.exit(0)
+    else:
+        sys.exit(1)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()
