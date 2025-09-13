@@ -2,9 +2,9 @@ name: Boundlexx CI/CD
 
 on:
   push:
-    # Publish `master` as Docker `latest` image.
+    # Run on all branches for testing, but only publish from master
     branches:
-      - master
+      - "**"
     # Publish `v1.2.3` tags as releases.
     tags:
       - v*
@@ -74,7 +74,7 @@ jobs:
     name: Build and Push Production Images
     needs: test
     runs-on: ubuntu-latest
-    if: github.event_name == 'push'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
 
     steps:
       - name: Checkout Repository
