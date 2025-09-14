@@ -1,23 +1,3 @@
-# Developme**Local Files (Not Committed) 
-- **`docker-compose.override.yml`** - Your personal local customizations
-- **`.local.env`** - Your personal environment variables (paths, API keys, etc.)
-
-## 🚀 Initial Setup Process
-
-### Step 1: Clone and Enter Repository
-```bash
-# Example folder structure:
-C:\VSCode\boundlexx-yatesjj\boundlexx\     # Main development
-C:\VSCode\boundlexx-test-pr2\boundlexx\    # Test environment
-```
-
-### Step 2: Create Local Environment Files
-```bash
-# Copy template files to create your local versions
-cp .env .local.env
-cp docker-compose.override.example.yml docker-compose.override.yml
-```p
-
 # Boundlexx Environment Setup - Complete Technical Guide
 
 This document provides comprehensive technical documentation for setting up, configuring, and troubleshooting Boundlexx development and test environments.
@@ -32,7 +12,7 @@ This document provides comprehensive technical documentation for setting up, con
 - **`.env`** - Base environment variables, safe defaults
 - **`docker-compose.override.example.yml`** - Template for local customizations
 
-### Local Files (Not Committed) 
+### Local Files (Not Committed)
 - **`docker-compose.override.yml`** - Your personal local customizations
 - **`.local.env`** - Your personal environment variables (paths, API keys, etc.)
 

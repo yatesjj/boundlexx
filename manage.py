@@ -7,7 +7,6 @@ if "prompt_steam_guard" in sys.argv:
     monkey.patch_all()
 
 import os  # noqa
-
 from pathlib import Path  # noqa
 
 
@@ -23,8 +22,8 @@ if __name__ == "__main__":
     os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings.local")
 
     try:
-        from django.core.management import execute_from_command_line
         from django.conf import settings
+        from django.core.management import execute_from_command_line
     except ImportError:
         # The above import may fail for some other reason. Ensure that the
         # issue is really that Django is missing to avoid masking other

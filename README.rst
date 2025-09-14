@@ -66,7 +66,7 @@ This fork is undergoing modernization guided by patterns from `ark-operator <htt
 
    .. code-block:: bash
 
-      # Copy template files to create your local versions  
+      # Copy template files to create your local versions
       cp .env .local.env
       cp docker-compose.override.example.yml docker-compose.override.yml
 
@@ -78,12 +78,12 @@ This fork is undergoing modernization guided by patterns from `ark-operator <htt
       python setup_development_container_improved.py
 
 #. **Customize your local environment:**
-   
+
    * Edit `docker-compose.override.yml` and update the path to your local Boundless install
    * Edit `.local.env` for any personal environment variables
 
 #. **Open in VS Code:**
-   
+
    * Open the project folder in VS Code
    * Ensure the extension "Remote - Containers" (ms-vscode-remote.remote-containers) is installed
    * You should be prompted to "Reopen in Container". If not, run "Remote-Containers: Reopen in Container" from Command Palette (`Ctrl+Shift+P`)
@@ -151,13 +151,13 @@ The project includes automated scripts for managing Docker container environment
 
 .. code-block:: bash
 
-   # Copy template files to create your local versions  
+   # Copy template files to create your local versions
    cp .env .local.env
    cp docker-compose.override.example.yml docker-compose.override.yml
-   
+
    # Set up development container (original ports, folder-prefixed names)
    python setup_development_container_improved.py
-   
+
    # Optional: preview changes first
    python setup_development_container_improved.py --dry-run
 
@@ -165,9 +165,9 @@ The project includes automated scripts for managing Docker container environment
 
 .. code-block:: bash
 
-   # Set up test container (Django on port 28001, folder-prefixed names)  
+   # Set up test container (Django on port 28001+, folder-prefixed names)
    python setup_test_container.py
-   
+
    # Optional: preview changes first
    python setup_test_container.py --dry-run
 
