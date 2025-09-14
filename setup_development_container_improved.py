@@ -5,10 +5,11 @@ Creates docker-compose.override.yml with proper container names and
 original upstream ports.
 """
 
+import argparse
 import os
 import sys
-import argparse
 from pathlib import Path
+import shutil
 
 
 def get_folder_prefix():
@@ -24,7 +25,7 @@ def get_folder_prefix():
         return current_dir.name
 
 
-def create_development_environment(prefix, dry_run=False):
+def create_development_environment(prefix, force=False, dry_run=False):
     """Create development environment with unique container names and original ports."""
 
     print(f"🛠️ Setting up development environment with prefix: {prefix}")
@@ -46,10 +47,6 @@ services:
       - "28000:8000"
     volumes:
       - .:/app
-      ## Replace with path to your Boundless install
-      - C:\\Program Files\\Steam\\steamapps\\common\\Boundless:/boundless
-      ## Replace with path to your out folder for `boundless_icon_render`
-      - /path/to/boundless_icon_render/out:/boundless-icons
     networks:
       - {prefix}-network
 
@@ -122,11 +119,6 @@ services:
     networks:
       - {prefix}-network
 
-  mailhog:
-    container_name: {prefix}-mailhog-1
-    networks:
-      - {prefix}-network
-
 networks:
   {prefix}-network:
     name: {prefix}-network
@@ -157,6 +149,16 @@ networks:
         print(f"❌ Error creating override file: {e}")
         return False
 
+    # Auto-copy .env and .local.env if not present
+    for env_file in ['.env', '.local.env']:
+        if not Path(env_file).exists():
+            try:
+                shutil.copyfile(f"{env_file}.example", env_file)
+                print(f"📄 Copied {env_file}.example to {env_file}")
+            except Exception as e:
+                print(f"❌ Error copying {env_file}: {e}")
+                return False
+
     return True
 
 
@@ -171,6 +173,10 @@ def main():
     parser.add_argument(
         '--dry-run', action='store_true',
         help='Show what would be created without making changes'
+    )
+    parser.add_argument(
+        '--force', action='store_true',
+        help='Force overwrite of existing docker-compose.override.yml'
     )
 
     args = parser.parse_args()
@@ -189,7 +195,14 @@ def main():
               "Are you in the boundlexx project root?")
         sys.exit(1)
 
-    success = create_development_environment(prefix, args.dry_run)
+    # Check if override file exists and handle --force flag
+    override_exists = os.path.exists('docker-compose.override.yml')
+    if override_exists and not args.force:
+        print("❌ Error: docker-compose.override.yml already exists. "
+              "Use --force to overwrite.")
+        sys.exit(1)
+
+    success = create_development_environment(prefix, args.force, args.dry_run)
 
     if success:
         if not args.dry_run:

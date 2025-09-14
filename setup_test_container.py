@@ -9,6 +9,7 @@ import sys
 import subprocess
 import argparse
 from pathlib import Path
+import shutil
 
 
 def get_folder_prefix():
@@ -16,7 +17,7 @@ def get_folder_prefix():
     current_dir = Path.cwd()
     parent_folder = current_dir.parent.name
 
-    # Use parent folder name as prefix (e.g., boundlexx-yatesjj-test-PR3)
+    # Use parent folder name as prefix (e.g., boundlexx-yatesjj-test-env)
     if parent_folder and parent_folder != '/':
         return parent_folder
     else:
@@ -24,7 +25,7 @@ def get_folder_prefix():
         return current_dir.name
 
 
-def create_test_environment(prefix, port_offset=1, dry_run=False):
+def create_test_environment(prefix, port_offset=1, dry_run=False, force=False):
     """Create test environment with unique container names and ports."""
 
     print(f"🧪 Setting up test environment with prefix: {prefix}")
@@ -59,11 +60,6 @@ services:
     networks:
       - {prefix}-network
 
-  mailhog:
-    container_name: {prefix}-mailhog-1
-    networks:
-      - {prefix}-network
-
   celery:
     container_name: {prefix}-celery-1
     networks:
@@ -95,7 +91,6 @@ networks:
     print(f"   Django: http://localhost:{django_port}")
     print("   PostgreSQL: internal only (port 5432)")
     print("   Redis: internal only (port 6379)")
-    print("   MailHog: internal only (port 8025)")
     print(f"   Network: {prefix}-network")
 
     if dry_run:
@@ -113,6 +108,17 @@ networks:
         print(f"✅ Created docker-compose.override.yml with {prefix} prefix")
     except Exception as e:
         print(f"❌ Error creating override file: {e}")
+        return False
+
+    # Copy .env file if not exists
+    try:
+        if not os.path.exists('.env'):
+            shutil.copyfile('.env.example', '.env')
+            print("✅ Copied .env.example to .env")
+        else:
+            print("⚠️  .env file already exists, not overwriting")
+    except Exception as e:
+        print(f"❌ Error copying .env file: {e}")
         return False
 
     # Start the containers
@@ -147,6 +153,10 @@ def main():
         '--dry-run', action='store_true',
         help='Show what would be created without making changes'
     )
+    parser.add_argument(
+        '--force', action='store_true',
+        help='Force overwrite of existing files (docker-compose.override.yml, .env)'
+    )
 
     args = parser.parse_args()
 
@@ -164,7 +174,32 @@ def main():
               "Are you in the boundlexx project root?")
         sys.exit(1)
 
-    success = create_test_environment(prefix, args.port_offset, args.dry_run)
+    # Check if files already exist and handle --force option
+    override_exists = os.path.exists('docker-compose.override.yml')
+    env_exists = os.path.exists('.env')
+
+    if override_exists or env_exists:
+        if args.force:
+            print("⚠️  Overwriting existing files:")
+            if override_exists:
+                print("   - docker-compose.override.yml")
+            if env_exists:
+                print("   - .env")
+        else:
+            print("❌ Error: The following files already exist:")
+            if override_exists:
+                print("   - docker-compose.override.yml")
+            if env_exists:
+                print("   - .env")
+            print("Run with --force to overwrite these files.")
+            sys.exit(1)
+
+    success = create_test_environment(
+        prefix,
+        args.port_offset,
+        args.dry_run,
+        args.force
+    )
 
     if success:
         if not args.dry_run:
@@ -173,7 +208,6 @@ def main():
             print(f"   Admin: http://localhost:{28000 + args.port_offset}/admin/")
             print("   PostgreSQL: internal only (port 5432)")
             print("   Redis: internal only (port 6379)")
-            print("   MailHog: internal only (port 8025)")
         sys.exit(0)
     else:
         sys.exit(1)
