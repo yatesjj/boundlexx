@@ -214,6 +214,18 @@ This document tracks all technical changes, findings, and decisions made during 
 
 ---
 
+## 2025-09-15: Removal of Legacy Scripts
+
+### 1. Deleted Legacy Scripts
+- **Files Removed:**
+  - `test_prefix_logic.py`
+  - `run_for_parallel_test_containers.py`
+- **Rationale:** All prefix logic and parallel test setup is now handled by `setup_test_container.py` and `setup_development_container_improved.py`. These legacy/experimental scripts are obsolete and have been removed from the project root.
+- **How to Roll Back:**
+  - Restore the files from git history if needed for reference.
+
+---
+
 ## Documentation Guidelines
 - Log every significant change, including rationale and rollback steps.
 - Document all findings, issues, and solutions in detail.

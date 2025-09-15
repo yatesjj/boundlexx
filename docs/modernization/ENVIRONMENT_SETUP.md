@@ -55,6 +55,8 @@ Edit `.local.env` and `docker-compose.override.yml` for your specific setup:
 - Port preferences  
 - Additional environment variables
 
+> **Note:** All prefix logic and parallel test setup is now handled by `setup_test_container.py` and `setup_development_container_improved.py`. Legacy scripts such as `test_prefix_logic.py` and `run_for_parallel_test_containers.py` are no longer needed and have been removed.
+
 ## 🎯 What Each Script Does
 
 ### `setup_development_container_improved.py`
@@ -62,10 +64,15 @@ Edit `.local.env` and `docker-compose.override.yml` for your specific setup:
 - Keeps base files clean
 - Works with your override files
 - Supports `--dry-run` for testing
+- Used for main development environment (Django on port 28000, others internal)
 
-### `setup_test_container.py` 
-- Creates test environments with port offsets
-- Useful for parallel testing/PR environments
+### `setup_test_container.py`
+- Adds meaningful prefixes to container names (e.g., `boundlexx-test-1-django`)
+- Creates test environments with port offsets (Django on 28001+, others internal)
+- Keeps base files clean and generates a complete override file for the test env
+- Works with your override files
+- Supports `--dry-run` for testing
+- Useful for parallel testing, PR verification, and isolated experiments
 
 ## 🔍 Verification
 

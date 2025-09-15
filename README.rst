@@ -52,17 +52,19 @@ This fork is undergoing modernization guided by patterns from `ark-operator <htt
 - Main app: ``boundlexx/`` (flat, no nesting)
 - Configs: Centralized in ``pyproject.toml`` (in progress)
 - Scripts: Management tools in root (e.g., setup_*.py)
+- **Legacy/experimental scripts removed:** All prefix logic and parallel test setup is now handled by `setup_test_container.py` and `setup_development_container_improved.py`. No need for `test_prefix_logic.py` or `run_for_parallel_test_containers.py`.
+
 
 **Quick Start for Development:**
 
-#. Clone the repo into a meaningful folder structure:
+1. Clone the repo into a meaningful folder structure:
 
    .. code-block:: bash
 
       # Example: C:\VSCode\boundlexx-yatesjj\boundlexx\
       # The parent folder name (boundlexx-yatesjj) will be used for container prefixes
 
-#. **Create local environment files:**
+2. **Create local environment files:**
 
    .. code-block:: bash
 
@@ -70,19 +72,19 @@ This fork is undergoing modernization guided by patterns from `ark-operator <htt
       cp .env .local.env
       cp docker-compose.override.example.yml docker-compose.override.yml
 
-#. **Set up development container with proper naming:**
+3. **Set up development container with proper naming:**
 
    .. code-block:: bash
 
       # This prefixes all containers with your folder name (e.g., boundlexx-yatesjj-django)
       python setup_development_container_improved.py
 
-#. **Customize your local environment:**
+4. **Customize your local environment:**
 
    * Edit `docker-compose.override.yml` and update the path to your local Boundless install
    * Edit `.local.env` for any personal environment variables
 
-#. **Open in VS Code:**
+5. **Open in VS Code:**
 
    * Open the project folder in VS Code
    * Ensure the extension "Remote - Containers" (ms-vscode-remote.remote-containers) is installed
@@ -99,36 +101,22 @@ Verify your containers are properly named:
 
 Expected output: `boundlexx-yatesjj-django-1`, `boundlexx-yatesjj-postgres-1`, etc.
 
-**Initial Database Setup:**
+**Next Steps: Manual/Task-Based Setup**
 
-#. Before starting the server for the first time, apply all database migrations:
+After the container is set up, you must perform the following steps inside the container or using VS Code tasks:
 
-   .. code-block:: bash
+1. **Install Python requirements (if not already installed by the container):**
+   - Use the "Boundlexx: Install Requirements" task or run `pip install -r requirements/dev.txt` inside the container.
+2. **Run database migrations:**
+   - Use the "Boundlexx: Migrate Database" task or run `python manage.py migrate` inside the container.
+3. **Create a Django superuser:**
+   - Use the "Boundlexx: Manage" task and enter `createsuperuser`, or run `python manage.py createsuperuser`.
+4. **Ingest game data:**
+   - Use the "Boundlexx: Ingest Game Data" task or run `python manage.py ingest_game_data 249.4.0`.
+5. **Import game objects (in order):**
+   - Run "Boundlexx: Create Game Objects (Skills Only)" first, then "Boundlexx: Create Game Objects (Recipes Only)", or use "Full Ingestion" to automate both.
 
-      python manage.py migrate
-
-#. Start the Django development server:
-
-   .. code-block:: bash
-
-      python manage.py runserver 0.0.0.0:28000
-
-#. The site will be available at http://127.0.0.1:28000 on your host machine.
-
-**User and Data Setup:**
-
-#. Open http://127.0.0.1:28000 in your web browser. The main site and API will be available, but to access the admin or create users, you must create a Django superuser.
-#. In VS Code, open the Command Palette (`Ctrl+Shift+P` or `Cmd+Shift+P` on Mac) and select "Tasks: Run Task".
-#. Choose "Boundlexx: Manage" from the list. When prompted for the management command, enter `createsuperuser` and follow the prompts to set up your admin user.
-
-#. Again open "Tasks: Run Task" and run "Boundlexx: Ingest Game Data" to import the latest Boundless game data.
-
-#. Run the full ingestion workflow using the VS Code task "Boundlexx: Create Game Objects (Full Ingestion)" which will automatically run skills first, then recipes in the correct order. Alternatively, you can run the individual tasks:
-
-   - "Boundlexx: Create Game Objects (Skills Only)" (must run first)
-   - "Boundlexx: Create Game Objects (Recipes Only)" (run after skills)
-
-#. **Important:** Skills must always be imported before recipes. The "Full Ingestion" task handles this automatically, but if running manual commands:
+> **Important:** Skills must always be imported before recipes. The "Full Ingestion" task handles this automatically, but if running manual commands:
 
    .. code-block:: bash
 
@@ -138,9 +126,18 @@ Expected output: `boundlexx-yatesjj-django-1`, `boundlexx-yatesjj-postgres-1`, e
       # Then import recipes
       python manage.py create_game_objects --recipe
 
-#. If you encounter a KeyError or missing data error during this step (e.g., `Skill.DoesNotExist: Decoration Crafting`), ensure you ran the skills import first before attempting recipes.
+If you encounter a KeyError or missing data error during this step (e.g., `Skill.DoesNotExist: Decoration Crafting`), ensure you ran the skills import first before attempting recipes.
 
-#. After these steps, your Boundlexx instance should be ready for use and development. To log in as an admin, visit http://127.0.0.1:28000/admin/ and use the credentials you created.
+**Django Server Startup:**
+
+- If you are using Docker Compose, the Django server is typically started automatically as a service.
+- If you are running locally or in a hybrid setup, you may need to start it manually with:
+
+   .. code-block:: bash
+
+      python manage.py runserver 0.0.0.0:28000
+
+After these steps, your Boundlexx instance should be ready for use and development. To log in as an admin, visit http://127.0.0.1:28000/admin/ and use the credentials you created.
 
 Container Management Scripts
 ----------------------------
