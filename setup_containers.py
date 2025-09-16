@@ -267,6 +267,64 @@ networks:
 """
 
 
+def update_devcontainer_config(env_type, dry_run=False):
+    """Update devcontainer.json for the selected environment."""
+    devcontainer_path = Path(".devcontainer/devcontainer.json")
+    
+    if not devcontainer_path.exists():
+        print(f"ℹ️  No devcontainer.json found at {devcontainer_path}, skipping...")
+        return True
+    
+    try:
+        # Read current devcontainer.json
+        with open(devcontainer_path, 'r', encoding='utf-8') as f:
+            content = f.read()
+        
+        # Determine new port based on environment
+        new_port = 28000 if env_type == "dev" else 28001
+        
+        # Use regex to find and update forwardPorts
+        import re
+        port_pattern = r'"forwardPorts"\s*:\s*\[\s*(\d+)\s*\]'
+        match = re.search(port_pattern, content)
+        
+        if match:
+            old_port = int(match.group(1))
+            if old_port == new_port:
+                if not dry_run:
+                    print(f"ℹ️  devcontainer.json already configured for "
+                          f"port {new_port}")
+                return True
+            
+            if dry_run:
+                print("📋 Would update devcontainer.json:")
+                print(f"   forwardPorts: [{old_port}] → [{new_port}]")
+            else:
+                # Replace the port in the content
+                new_content = re.sub(
+                    port_pattern,
+                    f'"forwardPorts": [\n        {new_port}\n    ]',
+                    content
+                )
+                
+                with open(devcontainer_path, 'w', encoding='utf-8') as f:
+                    f.write(new_content)
+                
+                print("✅ Updated devcontainer.json:")
+                print(f"   forwardPorts: [{old_port}] → [{new_port}]")
+        else:
+            if dry_run:
+                print("📋 No forwardPorts found in devcontainer.json to update")
+            else:
+                print("ℹ️  No forwardPorts found in devcontainer.json to update")
+        
+        return True
+        
+    except Exception as e:
+        print(f"⚠️  Warning: Could not update devcontainer.json: {e}")
+        return True  # Don't fail the whole setup for this
+
+
 def setup_environment(env_type, dry_run=False, force=False):
     """Set up the specified environment."""
     
@@ -313,6 +371,9 @@ def setup_environment(env_type, dry_run=False, force=False):
         else:
             preview = override_content
         print(preview)
+        
+        # Also preview devcontainer updates
+        update_devcontainer_config(env_type, dry_run=True)
         return True
 
     # Write the override file
@@ -322,6 +383,9 @@ def setup_environment(env_type, dry_run=False, force=False):
     except Exception as e:
         print(f"❌ Error writing {override_path}: {e}")
         return False
+
+    # Update devcontainer.json for the selected environment
+    update_devcontainer_config(env_type, dry_run)
 
     print(f"\n🌐 Your {env_type} environment is ready!")
     print(f"   Access Django at: http://localhost:{port}")

@@ -51,9 +51,25 @@ def _create_items(items_list, subtitles):
             )
             item_obj.name = compiled_items[string_item_id]["name"]
             subtitle_id = item["subtitle_id"]
-            # print(f"[DEBUG] subtitle_id: {subtitle_id} (type: {type(subtitle_id)})")
-            # print(f"[DEBUG] subtitles keys: {list(subtitles.keys())}")
-            item_obj.item_subtitle = subtitles[subtitle_id]
+            
+            # Handle subtitle lookup with proper error handling
+            try:
+                item_obj.item_subtitle = subtitles[subtitle_id]
+            except KeyError:
+                print(f"[ERROR] subtitle_id {subtitle_id} not found")
+                print(f"[DEBUG] Available keys: {list(subtitles.keys())[:10]}")
+                # Try to find by converting types
+                found = False
+                for key in subtitles.keys():
+                    if str(key) == str(subtitle_id):
+                        item_obj.item_subtitle = subtitles[key]
+                        print("[FIX] Found subtitle by string conversion")
+                        found = True
+                        break
+                if not found:
+                    # Handle missing subtitles gracefully - set to None or default
+                    print(f"[WARNING] Subtitle {subtitle_id} not found")
+                    item_obj.item_subtitle = None
             item_obj.mint_value = compiled_items[string_item_id]["coinValue"]
             item_obj.max_stack = compiled_items[string_item_id]["maxStackSize"]
             item_obj.can_be_sold = item_obj.game_id not in settings.BOUNDLESS_NO_SELL
@@ -93,10 +109,26 @@ def _create_colors(color_list):
     with click.progressbar(color_palettes) as pbar:
         for color_palette in pbar:
             for color_variations, color_id in color_palette["colorVariations"]:
-                # print(f"[DEBUG] color_id: {color_id} (type: {type(color_id)})")
-                # print(f"[DEBUG] colors keys: {list(colors.keys())}")
+                # Handle color lookup with proper error handling
+                try:
+                    color = colors[color_id]
+                except KeyError:
+                    print(f"[ERROR] color_id {color_id} not found")
+                    print(f"[DEBUG] Available color keys: {list(colors.keys())[:10]}")
+                    # Try to find by converting types
+                    found = False
+                    for key in colors.keys():
+                        if str(key) == str(color_id):
+                            color = colors[key]
+                            print("[FIX] Found color by string conversion")
+                            found = True
+                            break
+                    if not found:
+                        print(f"[WARNING] Color {color_id} not found, skipping")
+                        continue
+                
                 _, was_created = ColorValue.objects.get_or_create(
-                    color=colors[color_id],
+                    color=color,
                     color_type=color_palette["name"],
                     defaults={
                         "shade": color_variations[0],
@@ -177,9 +209,17 @@ def _create_localized_names(lang_name, lang_data, data):
     print_result("localized names", localizations_created)
 
 
-def _create_localization_data(strings, data):
+def _create_localization_data(strings, data, english_only=False):
     click.echo("Processing localization data...")
-    for lang_name, lang_data in strings.items():
+    
+    # If english_only flag is set, only process English
+    if english_only:
+        languages_to_process = {"english": strings["english"]}
+        click.echo("Note: Processing English only (use --all-languages for full)")
+    else:
+        languages_to_process = strings
+    
+    for lang_name, lang_data in languages_to_process.items():
         _create_localized_names(lang_name, lang_data, data)
 
         click.echo(f"Creating localized strings for {lang_name}...")
@@ -203,7 +243,7 @@ def _create_localization_data(strings, data):
         print_result("localized strings", strings_created)
 
 
-def run(force=False, **kwargs):
+def run(force=False, english_only=False, **kwargs):
     strings = GameFile.objects.get(
         folder="assets/archetypes", filename="itemcolorstrings.dat"
     ).content
@@ -229,4 +269,4 @@ def run(force=False, **kwargs):
         "colors": _create_colors(strings["strings"]["english"]["colors"].keys()),
     }
 
-    _create_localization_data(strings["strings"], data)
+    _create_localization_data(strings["strings"], data, english_only)

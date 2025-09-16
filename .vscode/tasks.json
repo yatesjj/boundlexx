@@ -4,15 +4,31 @@
     "version": "2.0.0",
     "tasks": [
         {
+            "label": "Boundlexx: Create Game Objects (Core Data - All Languages)",
+            "type": "shell",
+            "command": "source <(cat ${workspaceFolder}/.local.env | grep -v '^#' | sed -E 's|^(.+)=(.*)$|export \\1=\\2|g') && python ${workspaceFolder}/manage.py create_game_objects --core",
+            "group": "build",
+            "problemMatcher": []
+        },
+        {
+            "label": "Boundlexx: Create Game Objects (Core Data - English Only)",
+            "type": "shell",
+            "command": "source <(cat ${workspaceFolder}/.local.env | grep -v '^#' | sed -E 's|^(.+)=(.*)$|export \\1=\\2|g') && python ${workspaceFolder}/manage.py create_game_objects --core --english-only",
+            "group": "build",
+            "problemMatcher": []
+        },
+        {
             "label": "Boundlexx: Create Game Objects (Skills Only)",
             "type": "shell",
             "command": "source <(cat ${workspaceFolder}/.local.env | grep -v '^#' | sed -E 's|^(.+)=(.*)$|export \\1=\\2|g') && python ${workspaceFolder}/manage.py create_game_objects --skill",
+            "group": "build",
             "problemMatcher": []
         },
         {
             "label": "Boundlexx: Create Game Objects (Recipes Only)",
             "type": "shell",
             "command": "source <(cat ${workspaceFolder}/.local.env | grep -v '^#' | sed -E 's|^(.+)=(.*)$|export \\1=\\2|g') && python ${workspaceFolder}/manage.py create_game_objects --recipe",
+            "group": "build",
             "problemMatcher": []
         },
         // Remove this invalid compound task from the tasks array
@@ -59,13 +75,72 @@
             "problemMatcher": []
         },
         {
-            "label": "Boundlexx: Create Game Objects (Full Ingestion)",
+            "label": "Boundlexx: Fast Create Game Objects (Core + Skills + Recipes - English Only)",
             "type": "shell",
+            "command": "echo 'Fast Setup: Core Data (English) → Skills → Recipes'",
+            "group": {
+                "kind": "build",
+                "isDefault": false
+            },
             "dependsOn": [
+                "Boundlexx: Create Game Objects (Core Data - English Only)",
                 "Boundlexx: Create Game Objects (Skills Only)",
                 "Boundlexx: Create Game Objects (Recipes Only)"
             ],
             "dependsOrder": "sequence",
+            "problemMatcher": []
+        },
+        {
+            "label": "Boundlexx: Create Game Objects (Core + Skills + Recipes - All Languages)",
+            "type": "shell",
+            "command": "echo 'Starting All Objects: Core Data → Skills → Recipes'",
+            "group": {
+                "kind": "build",
+                "isDefault": false
+            },
+            "dependsOn": [
+                "Boundlexx: Create Game Objects (Core Data - All Languages)",
+                "Boundlexx: Create Game Objects (Skills Only)",
+                "Boundlexx: Create Game Objects (Recipes Only)"
+            ],
+            "dependsOrder": "sequence",
+            "problemMatcher": []
+        },
+        {
+            "label": "Boundlexx: Complete Setup (Ingest + Core + Skills + Recipes - All Languages)",
+            "type": "shell",
+            "command": "echo 'Complete setup: Ingest Game Data → Core Data → Skills → Recipes'",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "dependsOn": [
+                "Boundlexx: Ingest Game Data",
+                "Boundlexx: Create Game Objects (Core + Skills + Recipes - All Languages)"
+            ],
+            "dependsOrder": "sequence",
+            "problemMatcher": []
+        },
+        {
+            "label": "Boundlexx: Fast Complete Setup (Ingest + Core + Skills + Recipes - English Only)",
+            "type": "shell",
+            "command": "echo 'Fast complete setup: Ingest Game Data → Core Data (English Only) → Skills → Recipes'",
+            "group": {
+                "kind": "build",
+                "isDefault": false
+            },
+            "dependsOn": [
+                "Boundlexx: Ingest Game Data",
+                "Boundlexx: Fast Create Game Objects (Core + Skills + Recipes - English Only)"
+            ],
+            "dependsOrder": "sequence",
+            "problemMatcher": []
+        },
+        {
+            "label": "Boundlexx: Add Remaining Languages",
+            "type": "shell",
+            "command": "source <(cat ${workspaceFolder}/.local.env | grep -v '^#' | sed -E 's|^(.+)=(.*)$|export \\1=\\2|g') && python ${workspaceFolder}/manage.py create_game_objects --core",
+            "group": "build",
             "problemMatcher": []
         },
         {
@@ -75,9 +150,9 @@
             "problemMatcher": []
         },
         {
-            "label": "Container: Setup Development",
+            "label": "Container: Setup Environment",
             "type": "shell",
-            "command": "python ${workspaceFolder}/setup_development_container_improved.py",
+            "command": "python ${workspaceFolder}/setup_containers.py",
             "problemMatcher": []
         }
     ],

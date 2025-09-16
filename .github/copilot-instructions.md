@@ -1,4 +1,10 @@
-# Copilot Instructions for Boundlexx Modernization
+# Copilot Instructions f### ✅ Automated VS Code Tasks (Recommended)
+- **"Boundlexx: Complete Setup (Ingest + Core + Skills + Recipes - All Languages)"** - Complete automation: ingest game data → core data → skills → recipes (all 5 languages)
+- **"Boundlexx: Fast Complete Setup (Ingest + Core + Skills + Recipes - English Only)"** - Fast development setup with English localizations only (80% faster)
+- **"Boundlexx: Create Game Objects (Core + Skills + Recipes - All Languages)"** - Runs core → skills → recipes automatically in correct order (all languages)
+- **"Boundlexx: Fast Create Game Objects (Core + Skills + Recipes - English Only)"** - Runs core → skills → recipes with English only for faster setup
+- **"Boundlexx: Create Game Objects (Core Data - English Only)"** - Import core data with English only for faster setup
+- **"Boundlexx: Add Remaining Languages"** - Add remaining localizations after English-only setupndlexx Modernization
 
 ## Authentication & User Management
 - To create an admin user, use the VS Code task "Boundlexx: Manage" and enter `createsuperuser` when prompted for the management command.
@@ -23,24 +29,39 @@
 ## Game Data Ingestion Workflow (IMPORTANT)
 
 ### ✅ Automated VS Code Tasks (Recommended)
-- **"Boundlexx: Create Game Objects (Full Ingestion)"** - Runs skills then recipes automatically in correct order
-- **"Boundlexx: Create Game Objects (Skills Only)"** - Import skills only
-- **"Boundlexx: Create Game Objects (Recipes Only)"** - Import recipes only (run after skills)
+- **"Boundlexx: Complete Setup (Game Data + Full Ingestion)"** - Complete automation: game data → core data → skills → recipes
+- **"Boundlexx: Fast Setup - English Only"** - Quick development setup with English localizations only (80% faster)
+- **"Boundlexx: Create Game Objects (Full Ingestion)"** - Runs core → skills → recipes automatically in correct order
+- **"Boundlexx: Create Game Objects (Core Data - English Only)"** - Import core data with English only for faster setup
+- **"Boundlexx: Add Remaining Languages"** - Add remaining localizations after English-only setup
+
+### 🚀 Fast Development Setup (Recommended)
+For faster development iterations, use English-only setup which reduces database size by ~80% (2,190 vs 10,964 LocalizedString objects):
+
+1. **English-only setup:** "Boundlexx: Fast Setup - English Only" 
+2. **Add languages later:** "Boundlexx: Add Remaining Languages" when needed
 
 ### 🚨 Critical Requirements
-1. **Skills MUST be imported before recipes** - recipes have foreign key dependencies on skills
-2. **Never use the legacy task** marked "DO NOT USE" - it's unreliable
-3. **Use separate commands** - running `--skill --recipe` together doesn't work due to transaction visibility issues
+1. **Core data MUST be imported before skills/recipes** - creates required LocalizedString objects
+2. **Skills MUST be imported before recipes** - recipes have foreign key dependencies on skills
+3. **Never use the legacy task** marked "DO NOT USE" - it's unreliable
+4. **Use separate commands** - running `--skill --recipe` together doesn't work due to transaction visibility issues
 
 ### Manual Command Workflow
 ```sh
-# Step 1: Import game data first
+# Fast setup (English only - recommended for development)
 python manage.py ingest_game_data 249.4.0
-
-# Step 2: Import skills (required first!)
+python manage.py create_game_objects --core --english-only
 python manage.py create_game_objects --skill
+python manage.py create_game_objects --recipe
 
-# Step 3: Import recipes (only after skills)
+# Add remaining languages later if needed
+python manage.py create_game_objects --core
+
+# Full setup (all 5 languages)
+python manage.py ingest_game_data 249.4.0
+python manage.py create_game_objects --core
+python manage.py create_game_objects --skill
 python manage.py create_game_objects --recipe
 ```
 

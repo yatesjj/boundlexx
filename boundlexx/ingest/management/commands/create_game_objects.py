@@ -69,7 +69,12 @@ BASE = "boundlexx.ingest.ingest"
     is_flag=True,
     help="Emojis group",
 )
-def command(force, start_item_id, end_item_id, skip_variants, **kwargs):
+@click.option(
+    "--english-only",
+    is_flag=True,
+    help="Process only English localizations (faster setup)",
+)
+def command(force, start_item_id, end_item_id, skip_variants, english_only, **kwargs):
     if not any(kwargs.values()):
         for index in kwargs:
             kwargs[index] = True  # pylint: disable=modified-iterating-dict
@@ -94,4 +99,5 @@ def command(force, start_item_id, end_item_id, skip_variants, **kwargs):
                 start_id=start_item_id,
                 end_id=end_item_id,
                 color_variants=(not skip_variants),
+                english_only=english_only,
             )

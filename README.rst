@@ -123,21 +123,40 @@ After the container is set up, you must perform the following steps inside the c
    - Use the "Boundlexx: Install Requirements" task or run `pip install -r requirements/dev.txt` inside the container.
 2. **Run database migrations:**
    - Use the "Boundlexx: Migrate Database" task or run `python manage.py migrate` inside the container.
+   - **If you see "models have changes not yet reflected in a migration":** First run "Boundlexx: Make Migrations" task or `python manage.py makemigrations`, then run migrate again.
 3. **Create a Django superuser:**
    - Use the "Boundlexx: Manage" task and enter `createsuperuser`, or run `python manage.py createsuperuser`.
 4. **Ingest game data:**
    - Use the "Boundlexx: Ingest Game Data" task or run `python manage.py ingest_game_data 249.4.0`.
-5. **Import game objects (in order):**
-   - Run "Boundlexx: Create Game Objects (Skills Only)" first, then "Boundlexx: Create Game Objects (Recipes Only)", or use "Full Ingestion" to automate both.
+5. **Import core data (REQUIRED FIRST):**
+   - **Fast setup (recommended)**: Use "Boundlexx: Create Game Objects (Core Data - English Only)" for faster initial setup with English localizations only
+   - **Full setup**: Use "Boundlexx: Create Game Objects (Core Data - All Languages)" to import all 5 languages (English, French, German, Italian, Spanish)
+6. **Import game objects (in order):**
+   - Run "Boundlexx: Create Game Objects (Skills Only)" first, then "Boundlexx: Create Game Objects (Recipes Only)"
+   - **For automation**: Use "Boundlexx: Fast Create Game Objects (Core + Skills + Recipes - English Only)" for quick English-only setup, or "Boundlexx: Create Game Objects (Core + Skills + Recipes - All Languages)" for all languages
+   - **For complete automation**: Use "Boundlexx: Fast Complete Setup (Ingest + Core + Skills + Recipes - English Only)" for fast setup, or "Boundlexx: Complete Setup (Ingest + Core + Skills + Recipes - All Languages)" for full setup
 
-> **Important:** Skills must always be imported before recipes. The "Full Ingestion" task handles this automatically, but if running manual commands:
+> **Important:** Choose your setup approach:
+
+**Fast Setup (Recommended for Development):**
 
    .. code-block:: bash
 
-      # Import skills first (required!)
+      # Quick setup with English only (~2,190 strings vs ~10,964)
+      python manage.py create_game_objects --core --english-only
       python manage.py create_game_objects --skill
+      python manage.py create_game_objects --recipe
+      
+      # Add remaining languages later when needed:
+      python manage.py create_game_objects --core
 
-      # Then import recipes
+**Full Setup (All Languages):**
+
+   .. code-block:: bash
+
+      # Complete setup with all 5 languages
+      python manage.py create_game_objects --core
+      python manage.py create_game_objects --skill  
       python manage.py create_game_objects --recipe
 
 If you encounter a KeyError or missing data error during this step (e.g., `Skill.DoesNotExist: Decoration Crafting`), ensure you ran the skills import first before attempting recipes.
