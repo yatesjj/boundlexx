@@ -156,8 +156,14 @@ def _create_localized_names(lang_name, lang_data, data):
     with click.progressbar(length=total) as pbar:
         localizations_created = 0
         for index, name in lang_data["colors"].items():
+            color_id = int(index)
+            if color_id not in data["colors"]:
+                click.echo(f"[WARNING] Skipping color_id {color_id} - no color object")
+                pbar.update(1)
+                continue
+                
             l, was_created = LocalizedName.objects.get_or_create(
-                game_obj=data["colors"][int(index)], lang=lang_name
+                game_obj=data["colors"][color_id], lang=lang_name
             )
             l.name = name
             l.save()
@@ -169,8 +175,14 @@ def _create_localized_names(lang_name, lang_data, data):
             pbar.render_progress()
 
         for index, name in lang_data["metals"].items():
+            metal_id = int(index)
+            if metal_id not in data["metals"]:
+                click.echo(f"[WARNING] Skipping metal_id {metal_id} - no metal object")
+                pbar.update(1)
+                continue
+                
             l, was_created = LocalizedName.objects.get_or_create(
-                game_obj=data["metals"][int(index)], lang=lang_name
+                game_obj=data["metals"][metal_id], lang=lang_name
             )
             l.name = name
             l.save()
@@ -182,8 +194,14 @@ def _create_localized_names(lang_name, lang_data, data):
             pbar.render_progress()
 
         for index, name in lang_data["items"].items():
+            item_id = int(index)
+            if item_id not in data["items"]:
+                click.echo(f"[WARNING] Skipping item_id {item_id} - no item object")
+                pbar.update(1)
+                continue
+                
             l, was_created = LocalizedName.objects.get_or_create(
-                game_obj=data["items"][int(index)], lang=lang_name
+                game_obj=data["items"][item_id], lang=lang_name
             )
             l.name = name
             l.save()
@@ -195,8 +213,14 @@ def _create_localized_names(lang_name, lang_data, data):
             pbar.render_progress()
 
         for index, name in lang_data["subtitles"].items():
+            subtitle_id = int(index)
+            if subtitle_id not in data["subtitles"]:
+                click.echo(f"[WARNING] Skipping subtitle_id {subtitle_id} - no object")
+                pbar.update(1)
+                continue
+                
             l, was_created = LocalizedName.objects.get_or_create(
-                game_obj=data["subtitles"][int(index)], lang=lang_name
+                game_obj=data["subtitles"][subtitle_id], lang=lang_name
             )
             l.name = name
             l.save()
