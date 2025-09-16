@@ -109,9 +109,9 @@ python manage.py create_game_objects --recipe
 
 ### Automatic Folder-Based Naming
 
-All container and service names are automatically generated using the name of the parent project folder as a prefix. For example, if your project is located in `C:\VSCode\boundlexx-yatesjj\boundlexx\`, all containers and networks will be named with the prefix `boundlexx-yatesjj-` (e.g., `boundlexx-yatesjj-django-1`, `boundlexx-yatesjj-postgres-1`). If you create a test or parallel environment in a different folder, such as `C:\VSCode\boundlexx-test-1\boundlexx\`, the containers will be named with the prefix `boundlexx-test-1-` (e.g., `boundlexx-test-1-django-1`).
+All container and service names are automatically generated using the name of the current project folder as a prefix. For example, if your project is located in `C:\VSCode\boundlexx-yatesjj\boundlexx-yatesjj\`, all containers and networks will be named with the prefix `boundlexx-yatesjj-` (e.g., `boundlexx-yatesjj-django-1`, `boundlexx-yatesjj-postgres-1`). If you create a test or parallel environment in a different folder, such as `C:\VSCode\boundlexx-yatesjj-test-2\boundlexx-yatesjj-test-2\`, the containers will be named with the prefix `boundlexx-yatesjj-test-2-` (e.g., `boundlexx-yatesjj-test-2-django-1`).
 
-This folder-based naming ensures complete isolation between environments, prevents naming conflicts, and makes it easy to identify which containers belong to which project or test instance. The naming scheme is applied automatically by the setup scripts and does not require manual configuration.
+This folder-based naming ensures complete isolation between environments, prevents naming conflicts, and makes it easy to identify which containers belong to which project or test instance. The naming scheme is applied automatically by the setup scripts and does not require manual configuration. Both development and test setup scripts now use the current folder name for the prefix.
 
 ### Documentation Structure
 - **Quick setup:** `README.rst` (simple instructions)

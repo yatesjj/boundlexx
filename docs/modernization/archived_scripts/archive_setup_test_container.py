@@ -7,7 +7,6 @@ Automatically detects folder name and applies it as container prefix.
 import argparse
 import os
 import shutil
-import subprocess
 import sys
 from pathlib import Path
 
@@ -15,14 +14,8 @@ from pathlib import Path
 def get_folder_prefix():
     """Get container prefix from parent folder name."""
     current_dir = Path.cwd()
-    parent_folder = current_dir.parent.name
-
-    # Use parent folder name as prefix (e.g., boundlexx-yatesjj-test-env)
-    if parent_folder and parent_folder != '/':
-        return parent_folder
-    else:
-        # Fallback to current folder name
-        return current_dir.name
+    # Use the current folder name as prefix (e.g., boundlexx-yatesjj-test-2)
+    return current_dir.name
 
 
 def create_test_environment(prefix, port_offset=1, dry_run=False, force=False):
@@ -49,7 +42,7 @@ def create_test_environment(prefix, port_offset=1, dry_run=False, force=False):
                 return False
 
     # Define port mappings with offset (only Django needs external port)
-    django_port = 28000 + port_offset     # 28001 for first test env
+    django_port = 28000 + port_offset     # 28000 for main test env, 28001+ for parallel
 
     # Create docker-compose.override.yml content
     override_content = f"""# Auto-generated test environment override
@@ -159,12 +152,12 @@ networks:
         print(f"⚠️ {override_path} exists - use --force to overwrite")
         return False
 
+
     if dry_run:
         print("\n🔍 DRY RUN - Would create/overwrite docker-compose.override.yml:")
         print("=" * 60)
         print(override_content)
         print("=" * 60)
-        print("\n🔍 DRY RUN - Would run: docker-compose up -d")
         return True
 
     # Write the override file
@@ -176,21 +169,9 @@ networks:
         print(f"❌ Error writing override file: {e}")
         return False
 
-    # Start the containers
-    try:
-        print("\n🚀 Starting test containers...")
-        subprocess.run(
-            ["docker-compose", "up", "-d"], check=True, capture_output=True, text=True
-        )
-        print("✅ Test environment started successfully!")
-        django_url = f"http://localhost:{django_port}"
-        print(f"🌐 Access your test environment at: {django_url}")
-        return True
-    except subprocess.CalledProcessError as e:
-        print(f"❌ Error starting containers: {e}")
-        print(f"   stdout: {e.stdout}")
-        print(f"   stderr: {e.stderr}")
-        return False
+    django_url = f"http://localhost:{django_port}"
+    print(f"🌐 Access your test environment at: {django_url}")
+    return True
 
 
 def main():
@@ -202,8 +183,8 @@ def main():
         help='Container name prefix (auto-detected from folder if not specified)'
     )
     parser.add_argument(
-        '--port-offset', type=int, default=1,
-        help='Port offset for test environment (default: 1)'
+        '--port-offset', type=int, default=0,
+        help='Port offset for test environment (default: 0, use 1+ for parallel envs)'
     )
     parser.add_argument(
         '--dry-run', action='store_true',
@@ -222,7 +203,7 @@ def main():
         print(f"📝 Using specified prefix: {prefix}")
     else:
         prefix = get_folder_prefix()
-        print(f"📁 Auto-detected prefix from folder: {prefix}")
+        print(f"📁 Auto-detected prefix from current folder: {prefix}")
 
     # Validate we're in a boundlexx project
     if not os.path.exists('docker-compose.yml'):

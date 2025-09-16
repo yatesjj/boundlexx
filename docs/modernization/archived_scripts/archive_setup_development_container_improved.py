@@ -12,16 +12,10 @@ from pathlib import Path
 
 
 def get_folder_prefix():
-    """Get container prefix from parent folder name."""
+    """Get container prefix from current folder name."""
     current_dir = Path.cwd()
-    parent_folder = current_dir.parent.name
-
-    # Use parent folder name as prefix (e.g., boundlexx-yatesjj)
-    if parent_folder and parent_folder != '/':
-        return parent_folder
-    else:
-        # Fallback to current folder name
-        return current_dir.name
+    # Use current folder name as prefix (e.g., boundlexx-yatesjj)
+    return current_dir.name
 
 
 def create_development_environment(prefix, force=False, dry_run=False):
@@ -168,7 +162,7 @@ def setup_development_containers(dry_run=False, prefix=None, force=False):
     if prefix:
         folder_name = prefix
     else:
-        folder_name = repo_dir.parent.name
+        folder_name = repo_dir.name
 
     print(f"🛠️ Setting up development environment with prefix: {folder_name}")
     print(f"📁 Working directory: {repo_dir}")
@@ -271,10 +265,6 @@ def setup_development_containers(dry_run=False, prefix=None, force=False):
 
     if not dry_run:
         print(f"🎉 Development environment '{folder_name}' is ready!")
-        print("   Django: http://localhost:28000")
-        print("   Admin: http://localhost:28000/admin/")
-        print("   PostgreSQL: internal only (port 5432)")
-        print("   Redis: internal only (port 6379)")
     else:
         print(f"🔍 Dry run complete for '{folder_name}'.")
 

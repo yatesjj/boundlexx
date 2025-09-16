@@ -1,8 +1,16 @@
 Boundlexx
 =========
 
-.. image:: https://img.shields.io/badge/built%20with-Cookiecutter%20Django-ff69b4.svg
-     :target: https://github.com/pydanny/cookiecutter-django/
+.. image:: https://img.shields.io/badge/built%20with-Cookiecutter%20Django-ff6**Verification:**
+
+Verify your containers are properly named:
+
+.. code-block:: bash
+
+   docker ps --format "table {{.Names}}\t{{.Image}}\t{{.Ports}}"
+
+Expected output for dev: `boundlexx-django-1`, `boundlexx-postgres-1`, etc.
+Expected output for test: `boundlexx-test-django-1`, `boundlexx-test-postgres-1`, etc.    :target: https://github.com/pydanny/cookiecutter-django/
      :alt: Built with Cookiecutter Django
 .. image:: https://img.shields.io/badge/code%20style-ruff-000000.svg
      :target: https://github.com/astral-sh/ruff
@@ -51,8 +59,8 @@ This fork is undergoing modernization guided by patterns from `ark-operator <htt
 
 - Main app: ``boundlexx/`` (flat, no nesting)
 - Configs: Centralized in ``pyproject.toml`` (in progress)
-- Scripts: Management tools in root (e.g., setup_*.py)
-- **Legacy/experimental scripts removed:** All prefix logic and parallel test setup is now handled by `setup_test_container.py` and `setup_development_container_improved.py`. No need for `test_prefix_logic.py` or `run_for_parallel_test_containers.py`.
+- Scripts: Management tools in root (e.g., setup_containers.py)
+- **Unified container setup:** All environment configuration is now handled by the single ``setup_containers.py`` script with simplified naming (boundlexx vs boundlexx-test).
 
 
 **Quick Start for Development:**
@@ -62,7 +70,7 @@ This fork is undergoing modernization guided by patterns from `ark-operator <htt
    .. code-block:: bash
 
       # Example: C:\VSCode\boundlexx-yatesjj\boundlexx\
-      # The parent folder name (boundlexx-yatesjj) will be used for container prefixes
+   # The current folder name (boundlexx-yatesjj) will be used for container prefixes
 
 2. **Create local environment files:**
 
@@ -72,12 +80,18 @@ This fork is undergoing modernization guided by patterns from `ark-operator <htt
       cp .env .local.env
       cp docker-compose.override.example.yml docker-compose.override.yml
 
-3. **Set up development container with proper naming:**
+3. **Set up your environment with unified container script:**
 
    .. code-block:: bash
 
-      # This prefixes all containers with your folder name (e.g., boundlexx-yatesjj-django)
-      python setup_development_container_improved.py
+      # For development environment (Django on port 28000)
+      python setup_containers.py --env dev
+
+      # For test environment (Django on port 28001) 
+      python setup_containers.py --env test
+
+      # Interactive mode (prompts for environment choice)
+      python setup_containers.py
 
 4. **Customize your local environment:**
 
@@ -142,31 +156,31 @@ After these steps, your Boundlexx instance should be ready for use and developme
 Container Management Scripts
 ----------------------------
 
-The project includes automated scripts for managing Docker container environments:
+The project includes a unified script for managing Docker container environments:
 
-**Development Setup:**
-
-.. code-block:: bash
-
-   # Copy template files to create your local versions
-   cp .env .local.env
-   cp docker-compose.override.example.yml docker-compose.override.yml
-
-   # Set up development container (original ports, folder-prefixed names)
-   python setup_development_container_improved.py
-
-   # Optional: preview changes first
-   python setup_development_container_improved.py --dry-run
-
-**Test Environment Setup:**
+**Environment Setup:**
 
 .. code-block:: bash
 
-   # Set up test container (Django on port 28001+, folder-prefixed names)
-   python setup_test_container.py
+   # Interactive mode - prompts you to choose dev or test
+   python setup_containers.py
 
-   # Optional: preview changes first
-   python setup_test_container.py --dry-run
+   # Development environment (boundlexx-*, Django on port 28000)
+   python setup_containers.py --env dev
+
+   # Test environment (boundlexx-test-*, Django on port 28001)
+   python setup_containers.py --env test
+
+   # Preview without writing files
+   python setup_containers.py --env dev --dry-run
+
+**Key Features:**
+
+* **Simple naming:** Development uses `boundlexx` prefix, test uses `boundlexx-test`
+* **Fixed ports:** 28000 for dev, 28001 for test (no complex offset calculations)
+* **Complete isolation:** Each environment gets its own containers, networks, and volumes
+* **Auto-setup:** Copies `.env` to `.local.env` if missing
+* **Safe defaults:** Won't overwrite existing files without confirmation
 
 **Container Status:**
 
@@ -174,6 +188,8 @@ The project includes automated scripts for managing Docker container environment
 
    # Check container status
    python container_status.py
+
+**Note:** Both setup scripts (`setup_development_container_improved.py` and `setup_test_container.py`) only generate/update configuration files. **They do NOT start containers automatically, nor do they print instructions to start them.** Both scripts use the current folder name for container and network prefixes. You are responsible for starting containers manually if desired, after reviewing and customizing your configuration files.
 
 **For detailed setup instructions, troubleshooting, and advanced workflows, see:**
 `docs/modernization/ENVIRONMENT_SETUP.md`
