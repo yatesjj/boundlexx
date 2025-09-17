@@ -87,7 +87,7 @@ This fork is undergoing modernization guided by patterns from `ark-operator <htt
       # For development environment (Django on port 28000)
       python setup_containers.py --env dev
 
-      # For test environment (Django on port 28001) 
+      # For test environment (Django on port 28001)
       python setup_containers.py --env test
 
       # Interactive mode (prompts for environment choice)
@@ -146,7 +146,7 @@ After the container is set up, you must perform the following steps inside the c
       python manage.py create_game_objects --core --english-only
       python manage.py create_game_objects --skill
       python manage.py create_game_objects --recipe
-      
+
       # Add remaining languages later when needed:
       python manage.py create_game_objects --core
 
@@ -156,7 +156,7 @@ After the container is set up, you must perform the following steps inside the c
 
       # Complete setup with all 5 languages
       python manage.py create_game_objects --core
-      python manage.py create_game_objects --skill  
+      python manage.py create_game_objects --skill
       python manage.py create_game_objects --recipe
 
 If you encounter a KeyError or missing data error during this step (e.g., `Skill.DoesNotExist: Decoration Crafting`), ensure you ran the skills import first before attempting recipes.
@@ -208,7 +208,7 @@ The project includes a unified script for managing Docker container environments
    # Check container status
    python container_status.py
 
-**Note:** Both setup scripts (`setup_development_container_improved.py` and `setup_test_container.py`) only generate/update configuration files. **They do NOT start containers automatically, nor do they print instructions to start them.** Both scripts use the current folder name for container and network prefixes. You are responsible for starting containers manually if desired, after reviewing and customizing your configuration files.
+**Note:** The unified setup script (`setup_containers.py`) only generates or updates configuration files. **It does NOT start containers automatically, nor does it print instructions to start them.** The script uses the current folder name for container and network prefixes. You are responsible for starting containers manually (e.g., with `docker-compose up -d`) after reviewing and customizing your configuration files.
 
 **For detailed setup instructions, troubleshooting, and advanced workflows, see:**
 `docs/modernization/ENVIRONMENT_SETUP.md`
