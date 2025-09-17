@@ -101,3 +101,56 @@ addopts = "--ds=config.settings.test --reuse-db --create-db --cov-report xml --c
 python_files = "tests.py test_*.py"
 env_override_existing_values = 1
 env_files= '.test.env'
+
+# Ruff configuration (modernization step replacing Black/isort/Flake8/Pylint gradually)
+[tool.ruff]
+line-length = 88
+target-version = "py39"
+extend-exclude = [
+  "*/migrations/*",
+  "docs",
+  "node_modules",
+]
+
+# Enable rule sets: (E,F) pycodestyle/pyflakes, I import sorting, B bugbear, N pep8-naming, UP pyupgrade, DJ Django
+lint.select = ["E", "F", "I", "B", "N", "UP", "DJ"]
+lint.ignore = [
+  # Existing stylistic allowances carried over from prior config
+  "E501",  # line length handled separately / already enforced logically
+  "B008",  # function call in default argument (common in Django patterns)
+]
+lint.per-file-ignores = { "tests/*" = ["S101"], "*/migrations/*" = ["ALL"] }
+
+[tool.ruff.lint.isort]
+known-first-party = ["boundlexx"]
+combine-as-imports = true
+force-single-line = false
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"
+
+# mypy configuration (initial pass). Will be tightened over time.
+[tool.mypy]
+python_version = "3.9"
+plugins = ["mypy_django_plugin.main"]
+exclude = [
+  ".*migrations.*",
+  "tests/",
+]
+ignore_missing_imports = true
+follow_imports = "silent"
+warn_unused_ignores = true
+warn_redundant_casts = true
+warn_return_any = true
+warn_unreachable = true
+show_error_codes = true
+pretty = true
+
+[tool.django-stubs]
+django_settings_module = "config.settings.test"
+
+[tool.mypy.plugins.django-stubs]
+django_settings_module = "config.settings.test"

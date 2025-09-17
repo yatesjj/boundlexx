@@ -1,28 +1,8 @@
-# Developme**Local Files (Not Committed) 
-- **`docker-compose.override.yml`** - Your personal local customizations
-- **`.local.env`** - Your personal environment variables (paths, API keys, etc.)
-
-## 🚀 Initial Setup Process
-
-### Step 1: Clone and Enter Repository
-```bash
-# Example folder structure:
-C:\VSCode\boundlexx-yatesjj\boundlexx\     # Main development
-C:\VSCode\boundlexx-test-pr2\boundlexx\    # Test environment
-```
-
-### Step 2: Create Local Environment Files
-```bash
-# Copy template files to create your local versions
-cp .env .local.env
-cp docker-compose.override.example.yml docker-compose.override.yml
-```p
-
 # Boundlexx Environment Setup - Complete Technical Guide
 
 This document provides comprehensive technical documentation for setting up, configuring, and troubleshooting Boundlexx development and test environments.
 
-**For quick setup, see:** `README.rst`  
+**For quick setup, see:** `README.rst`
 **For project tracking, see:** `MODERNIZATION_TRACKING.md`
 
 ## 🏗️ Architecture Overview
@@ -32,7 +12,7 @@ This document provides comprehensive technical documentation for setting up, con
 - **`.env`** - Base environment variables, safe defaults
 - **`docker-compose.override.example.yml`** - Template for local customizations
 
-### Local Files (Not Committed) 
+### Local Files (Not Committed)
 - **`docker-compose.override.yml`** - Your personal local customizations
 - **`.local.env`** - Your personal environment variables (paths, API keys, etc.)
 
@@ -53,39 +33,43 @@ cp docker-compose.override.example.yml docker-compose.override.yml
 ```
 
 
-### Step 3: Run the Appropriate Setup Script (**Never Both in the Same Folder!**)
+### Step 3: Run the Container Setup Script
 
-> **⚠️ IMPORTANT:**
-> Only run ONE setup script per environment/folder:
-> - For main development, run:
->   ```bash
->   python setup_development_container_improved.py
->   ```
-> - For test/PR/parallel environments, run:
->   ```bash
->   python setup_test_container.py
->   ```
-> **Never run both scripts in the same folder.** Each script configures container names and port mappings for its specific use case. Running both in one folder will cause conflicts.
+Use the unified setup script to configure your environment:
 
-This will prefix all container names with your folder name and set the correct port mapping for your environment.
+```bash
+# Interactive mode (prompts for environment choice)
+python setup_containers.py
+
+# Direct environment selection:
+python setup_containers.py --env dev     # Development (boundlexx-*, port 28000)
+python setup_containers.py --env test    # Test (boundlexx-test-*, port 28001)
+
+# Preview without writing files:
+python setup_containers.py --env dev --dry-run
+```
+
+This will create a `docker-compose.override.yml` file with the appropriate container names and port mappings for your chosen environment.
 
 ### Step 4: Customize Your Local Environment
 Edit `.local.env` and `docker-compose.override.yml` for your specific setup:
 - Local file paths (Steam, boundless icons, etc.)
-- Port preferences  
+- Port preferences
 - Additional environment variables
 
-## 🎯 What Each Script Does
+> **Note:** Container setup is now handled by the unified `setup_containers.py` script with simplified naming (boundlexx vs boundlexx-test).
 
-### `setup_development_container_improved.py`
-- Adds meaningful prefixes to container names (e.g., `boundlexx-yatesjj-django`)
-- Keeps base files clean
-- Works with your override files
-- Supports `--dry-run` for testing
+## 🎯 Container Setup Script
 
-### `setup_test_container.py` 
-- Creates test environments with port offsets
-- Useful for parallel testing/PR environments
+### `setup_containers.py`
+- **Unified script** for both development and test environments
+- **Simple naming:** `boundlexx` for dev, `boundlexx-test` for test
+- **Fixed ports:** 28000 for dev, 28001 for test (no offset calculations)
+- **Interactive mode** prompts you to choose environment type
+- **Complete isolation** with separate networks, volumes, and containers
+- **Safe defaults:** Won't overwrite files without confirmation
+- **Auto-setup:** Copies `.env` to `.local.env` if missing
+- **Does NOT start containers automatically** - you review and start manually
 
 ## 🔍 Verification
 
@@ -94,21 +78,44 @@ After setup, verify your containers are properly named:
 docker ps --format "table {{.Names}}\t{{.Image}}\t{{.Ports}}"
 ```
 
-Expected output:
+Expected output for **development**:
 ```
-NAMES                           IMAGE                PORTS
-boundlexx-yatesjj-django-1      boundlexx_dev_django 28000/tcp
-boundlexx-yatesjj-postgres-1    boundlexx_postgres   5432/tcp
-boundlexx-yatesjj-redis-1       redis:5.0            6379/tcp
+NAMES                    IMAGE                PORTS
+boundlexx-django-1       boundlexx_dev_django 28000/tcp
+boundlexx-postgres-1     boundlexx_postgres   5432/tcp
+boundlexx-redis-1        redis:5.0            6379/tcp
+```
+
+Expected output for **test**:
+```
+NAMES                         IMAGE                PORTS
+boundlexx-test-django-1       boundlexx_dev_django 28001/tcp
+boundlexx-test-postgres-1     boundlexx_postgres   5432/tcp
+boundlexx-test-redis-1        redis:5.0            6379/tcp
 ```
 
 ## ✅ Best Practices
 
 1. **Never commit** `docker-compose.override.yml` or `.local.env`
-2. **Always use** the setup scripts for consistent naming
+2. **Always use** the setup script for consistent naming
 3. **Keep base files clean** - put customizations in override files
-4. **Use meaningful folder names** for automatic prefixing
+4. **Choose your environment** clearly (dev vs test)
 5. **Document** any custom setup in your override files
+
+
+## CI/CD & Automated Container Builds
+
+Boundlexx uses a modern GitHub Actions workflow to automate building, testing, and linting of all Docker containers on every push to the default branch. This ensures that the project is always in a deployable state and that container builds are reproducible and reliable.
+
+- The workflow is defined in `.github/workflows/ci.yml`.
+- On every push, GitHub Actions will:
+   - Build all Docker images using Docker Buildx with advanced caching.
+   - Run all linters (e.g., ruff, mypy) and tests (pytest) inside containers.
+   - Automatically tag and push images to the GitHub Container Registry if configured.
+- Workflow status and logs can be monitored in the GitHub Actions tab.
+- For troubleshooting, see `docs/modernization/WORKFLOW_MONITORING.md`.
+
+For a detailed breakdown of the workflow, changes, and rollback instructions, see `docs/modernization/GITHUB_ACTIONS_UPDATE.md`.
 
 ## 🔄 Multi-Environment Workflow (Recommended)
 
@@ -116,150 +123,92 @@ For testing multiple branches/PRs, use **separate folders** for complete isolati
 
 ```bash
 # Create separate folders for each environment
-C:\VSCode\boundlexx-yatesjj\boundlexx-yatesjj\     # Main development  
-C:\VSCode\boundlexx-test-pr2\boundlexx\            # Test PR #2
-C:\VSCode\boundlexx-experiment\boundlexx\          # Experimental branch
+C:\VSCode\boundlexx-main\           # Main development (boundlexx-*)
+C:\VSCode\boundlexx-test-pr2\       # Test PR #2 (boundlexx-test-*)
+C:\VSCode\boundlexx-experiment\     # Experimental branch
 
-# Each gets its own prefixed containers automatically
-boundlexx-yatesjj-*           # Main containers
-boundlexx-test-pr2-*          # Test containers  
-boundlexx-experiment-*        # Experiment containers
+# Each gets its own environment type:
+cd C:\VSCode\boundlexx-main && python setup_containers.py --env dev
+cd C:\VSCode\boundlexx-test-pr2 && python setup_containers.py --env test
+cd C:\VSCode\boundlexx-experiment && python setup_containers.py --env test
 ```
 
 ### Setup Process for Each Environment:
 
 1. **Clone into meaningful folder structure**
 2. **Copy template files**: `cp .env .local.env` and `cp docker-compose.override.example.yml docker-compose.override.yml`
-3. **Run appropriate setup script**:
-   - **Main development**: `python setup_development_container_improved.py`
-   - **Test environments**: `python setup_test_container.py` (adds port offsets)
+3. **Run the unified setup script**:
+   - `python setup_containers.py --env dev` for main development
+   - `python setup_containers.py --env test` for test environments
 4. **Customize local files** as needed
 
 ### Benefits of This Approach:
-- ✅ **Complete isolation** between environments
-- ✅ **No port conflicts** (automatic container prefixes + test offsets)
-- ✅ **Git-friendly** (each folder can be on different branches)
-- ✅ **Safe testing** (can't accidentally affect main development)
-- ✅ **Easy cleanup** (just delete folder when done)
-- ✅ **Clear separation** of concerns
+
+This prevents container name conflicts and makes it easy to run multiple environments simultaneously.
 
 This prevents container name conflicts and makes it easy to run multiple environments simultaneously.
 
 ## 🧪 Testing Container Management Changes
 
-When making changes to container management scripts or Docker configuration, follow this testing workflow:
 
-### Quick Testing Workflow
+When making changes to container management scripts or Docker configuration, use the following workflow:
 
 1. **Setup Test Environment:**
-   ```bash
-   # Clone to test location
-   git clone https://github.com/yatesjj/boundlexx.git C:\VSCode\boundlexx-test-1\boundlexx
-   cd C:\VSCode\boundlexx-test-1\boundlexx
-   
-   # Setup local files
-   cp .env .local.env
-   cp docker-compose.override.example.yml docker-compose.override.yml
-   ```
-
-2. **Test Container Scripts:**
-   ```bash
-   # Test with dry-run first
-   python setup_test_container.py --dry-run
-   
-   # Apply changes (creates boundlexx-test-1-* containers with port offsets)
-   python setup_test_container.py
-   
-   # Verify container setup
-   python container_status.py
-   ```
-
+   - Clone the repo to a test location
+   - Copy `.env` to `.local.env` and `docker-compose.override.example.yml` to `docker-compose.override.yml`
+2. **Test the unified setup script:**
+   - Run `python setup_containers.py --env test --dry-run` to preview changes
+   - Run `python setup_containers.py --env test` to apply changes
 3. **Verify Isolation:**
-   ```bash
-   # Start test environment
-   docker-compose up -d
-   
-   # Check containers (should see Django on port 28001, others internal)
-   docker ps --format "table {{.Names}}\t{{.Ports}}"
-   
-   # Verify no conflicts with main development
-   # (your main boundlexx-yatesjj-* containers should still be running)
-   ```
-
+   - Start the test environment with `docker-compose up -d`
+   - Check containers with `docker ps --format "table {{.Names}}\t{{.Ports}}"`
+   - Ensure no conflicts with main development
 4. **Test Functionality:**
-   ```bash
-   # Test database connection
-   docker-compose run --rm manage dbshell
-   
-   # Test web application (should be on port 28001)
-   curl http://127.0.0.1:28001
-   ```
-
+   - Test database and web application as needed
 5. **Cleanup:**
-   ```bash
-   # Stop and remove test containers
-   docker-compose down
-   docker system prune -f
-   
-   # Remove test directory
-   cd ..
-   rm -rf C:\VSCode\boundlexx-test-1
-   ```
+   - Stop and remove test containers with `docker-compose down` and `docker system prune -f`
+   - Remove the test directory when done
 
 ### Environment Comparison
 
+
 | Environment Type | Container Names | Ports | Script | Use Case |
-|-----------------|----------------|-------|--------|----------|
-| **Main Development** | `boundlexx-yatesjj-*` | Django: 28000, Others: internal | `setup_development_container_improved.py` | Daily development work |
-| **Test Environment** | `boundlexx-test-1-*` | Django: 28001, Others: internal | `setup_test_container.py` | Testing changes, PR verification |
-| **Experiment** | `boundlexx-experiment-*` | Django: 28000, Others: internal | `setup_development_container_improved.py` | Feature experiments |
+|------------------|----------------|-------|--------|----------|
+| **Development**  | `boundlexx-django-1`, `boundlexx-postgres-1` | Django: 28000, Others: internal | `setup_containers.py --env dev` | Daily development |
+| **Test**         | `boundlexx-test-django-1`, `boundlexx-test-postgres-1` | Django: 28001, Others: internal | `setup_containers.py --env test` | PR testing, parallel dev |
 
 ### Benefits of Test Environment Approach:
 - ✅ **Safe testing** - No risk to main development data
-- ✅ **Port isolation** - Automatic port offsets prevent conflicts  
+- ✅ **Port isolation** - Automatic port offsets prevent conflicts
 - ✅ **Quick setup** - Standardized testing workflow
 - ✅ **Easy cleanup** - Complete environment removal in one command
 - ✅ **Parallel development** - Run main and test environments simultaneously
 
 ## 📊 Container Management Scripts Reference
 
-### Available Scripts
+
+### Available Script
 
 | Script | Purpose | Port Strategy | Container Names | Use Case |
 |--------|---------|---------------|-----------------|----------|
-| `setup_development_container_improved.py` | Main development | Django: 28000, Others: internal | `{folder}-django-1`, `{folder}-postgres-1` | Daily development |
-| `setup_test_container.py` | Test environments | Django: 28001, Others: internal | `{folder}-django-1`, `{folder}-postgres-1` | PR testing, parallel dev |
-| `container_status.py` | Status monitoring | N/A | N/A | Check current setup |
+| `setup_containers.py` | Unified dev/test setup | Dev: 28000, Test: 28001 | `boundlexx-django-1`, `boundlexx-test-django-1` | All environment setup |
 
 ### Port Mapping Details
 
-**Development Environment (Original Upstream Ports):**
+
+**Development Environment:**
 - **Django:** `28000:8000` (external access)
 - **PostgreSQL:** Internal only (`5432`)
-- **Redis:** Internal only (`6379`) 
+- **Redis:** Internal only (`6379`)
 - **MailHog:** Internal only (`8025`)
 
-**Test Environment (+1 Django Port, Others Internal):**
+**Test Environment:**
 - **Django:** `28001:8000` (external access)
 - **PostgreSQL:** Internal only (`5432`)
 - **Redis:** Internal only (`6379`)
 - **MailHog:** Internal only (`8025`)
 
 ### Folder-Based Automatic Naming
-
-Both scripts automatically detect your parent folder name and use it as the container prefix:
-
-```bash
-C:\VSCode\boundlexx-yatesjj\boundlexx\     → boundlexx-yatesjj-django-1
-C:\VSCode\boundlexx-test-pr3\boundlexx\    → boundlexx-test-pr3-django-1  
-C:\VSCode\boundlexx-experiment\boundlexx\  → boundlexx-experiment-django-1
-```
-
-This ensures:
-- ✅ **Unique container names** across all environments
-- ✅ **Clear identification** of which environment containers belong to
-- ✅ **No naming conflicts** when running multiple environments
-- ✅ **Automatic network isolation** with prefixed network names
 
 ## 🔧 Troubleshooting
 
@@ -274,7 +223,7 @@ docker ps -a --filter name=boundlexx
 docker rm -f container-name-here
 ```
 
-**Issue: "Port already in use"**  
+**Issue: "Port already in use"**
 ```bash
 # Solution: Check what's using the port
 netstat -an | findstr 28000
@@ -312,7 +261,7 @@ Each environment creates its own Docker network:
 # Main development
 boundlexx-yatesjj-network
 
-# Test environments  
+# Test environments
 boundlexx-test-1-network
 boundlexx-test-pr3-network
 ```
