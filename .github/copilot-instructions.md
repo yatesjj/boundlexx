@@ -18,6 +18,13 @@
   python manage.py migrate
   ```
 
+- **If you see "have changes that are not yet reflected in a migration":**
+  ```sh
+  python manage.py makemigrations
+  python manage.py migrate
+  ```
+  This is normal in fresh environments and indicates model changes that need new migration files.
+
 - Then start the Django development server inside the dev container:
 
   ```sh
@@ -194,6 +201,7 @@ Boundlexx is a Django monorepo for Boundless game data, supporting both containe
 - **VS Code Tasks (Recommended):**
   - Use "Tasks: Run Task" from Command Palette for all common operations
   - Key tasks: "Boundlexx: Manage", "Boundlexx: Migrate Database", "Boundlexx: Ingest Game Data"
+  - **Migration workflow:** If migration warns about pending changes, run "Boundlexx: Make Migrations" then "Boundlexx: Migrate Database"
   - **Ingestion:** Use "Boundlexx: Create Game Objects (Full Ingestion)" for automated skills+recipes workflow
   - Avoid tasks marked "LEGACY, DO NOT USE"
 - **Lint/Format:**
