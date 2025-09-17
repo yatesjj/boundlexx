@@ -135,7 +135,7 @@ networks:
 
     # Write the override file
     try:
-        with open('docker-compose.override.yml', 'w') as f:
+        with open("docker-compose.override.yml", "w") as f:
             f.write(override_content)
         print(f"✅ Created docker-compose.override.yml with {prefix} prefix")
     except Exception as e:
@@ -143,7 +143,7 @@ networks:
         return False
 
     # Auto-copy .env and .local.env if not present
-    for env_file in ['.env', '.local.env']:
+    for env_file in [".env", ".local.env"]:
         if not Path(env_file).exists():
             try:
                 shutil.copyfile(f"{env_file}.example", env_file)
@@ -297,9 +297,7 @@ def main():
 
     args = parser.parse_args()
     setup_development_containers(
-        dry_run=args.dry_run,
-        prefix=args.prefix,
-        force=args.force
+        dry_run=args.dry_run, prefix=args.prefix, force=args.force
     )
 
 

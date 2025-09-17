@@ -42,7 +42,7 @@ def create_test_environment(prefix, port_offset=1, dry_run=False, force=False):
                 return False
 
     # Define port mappings with offset (only Django needs external port)
-    django_port = 28000 + port_offset     # 28000 for main test env, 28001+ for parallel
+    django_port = 28000 + port_offset  # 28000 for main test env, 28001+ for parallel
 
     # Create docker-compose.override.yml content
     override_content = f"""# Auto-generated test environment override
@@ -152,7 +152,6 @@ networks:
         print(f"⚠️ {override_path} exists - use --force to overwrite")
         return False
 
-
     if dry_run:
         print("\n🔍 DRY RUN - Would create/overwrite docker-compose.override.yml:")
         print("=" * 60)
@@ -176,23 +175,27 @@ networks:
 
 def main():
     parser = argparse.ArgumentParser(
-        description='Setup test environment with unique container names and ports'
+        description="Setup test environment with unique container names and ports"
     )
     parser.add_argument(
-        '--prefix',
-        help='Container name prefix (auto-detected from folder if not specified)'
+        "--prefix",
+        help="Container name prefix (auto-detected from folder if not specified)",
     )
     parser.add_argument(
-        '--port-offset', type=int, default=0,
-        help='Port offset for test environment (default: 0, use 1+ for parallel envs)'
+        "--port-offset",
+        type=int,
+        default=0,
+        help="Port offset for test environment (default: 0, use 1+ for parallel envs)",
     )
     parser.add_argument(
-        '--dry-run', action='store_true',
-        help='Show what would be created without making changes'
+        "--dry-run",
+        action="store_true",
+        help="Show what would be created without making changes",
     )
     parser.add_argument(
-        '--force', action='store_true',
-        help='Overwrite existing override file without prompting'
+        "--force",
+        action="store_true",
+        help="Overwrite existing override file without prompting",
     )
 
     args = parser.parse_args()
@@ -206,16 +209,15 @@ def main():
         print(f"📁 Auto-detected prefix from current folder: {prefix}")
 
     # Validate we're in a boundlexx project
-    if not os.path.exists('docker-compose.yml'):
-        print("❌ Error: docker-compose.yml not found. "
-              "Are you in the boundlexx project root?")
+    if not os.path.exists("docker-compose.yml"):
+        print(
+            "❌ Error: docker-compose.yml not found. "
+            "Are you in the boundlexx project root?"
+        )
         sys.exit(1)
 
     success = create_test_environment(
-        prefix,
-        args.port_offset,
-        args.dry_run,
-        args.force
+        prefix, args.port_offset, args.dry_run, args.force
     )
 
     if success:
@@ -230,5 +232,5 @@ def main():
         sys.exit(1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

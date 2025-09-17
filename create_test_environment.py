@@ -24,22 +24,22 @@ def detect_shell_environment():
     """Detect the current shell environment."""
     system = platform.system().lower()
     shell_info = {
-        'system': system,
-        'is_windows': system == 'windows',
-        'shell': 'unknown'
+        "system": system,
+        "is_windows": system == "windows",
+        "shell": "unknown",
     }
 
     # Detect shell type
-    if shell_info['is_windows']:
+    if shell_info["is_windows"]:
         # Check if running in PowerShell
-        if os.environ.get('PSModulePath'):
-            shell_info['shell'] = 'powershell'
+        if os.environ.get("PSModulePath"):
+            shell_info["shell"] = "powershell"
         else:
-            shell_info['shell'] = 'cmd'
+            shell_info["shell"] = "cmd"
     else:
         # Unix-like systems
-        shell = os.environ.get('SHELL', '').split('/')[-1]
-        shell_info['shell'] = shell or 'bash'
+        shell = os.environ.get("SHELL", "").split("/")[-1]
+        shell_info["shell"] = shell or "bash"
 
     return shell_info
 
@@ -47,18 +47,18 @@ def detect_shell_environment():
 def run_command(cmd, shell_env, cwd=None, capture_output=False):
     """Run a command appropriate for the current shell environment."""
     try:
-        if shell_env['is_windows'] and shell_env['shell'] == 'powershell':
+        if shell_env["is_windows"] and shell_env["shell"] == "powershell":
             # Use PowerShell on Windows
             if isinstance(cmd, list):
-                cmd_str = ' '.join(cmd)
+                cmd_str = " ".join(cmd)
             else:
                 cmd_str = cmd
             result = subprocess.run(
-                ['powershell', '-Command', cmd_str],
+                ["powershell", "-Command", cmd_str],
                 cwd=cwd,
                 capture_output=capture_output,
                 text=True,
-                check=True
+                check=True,
             )
         else:
             # Use regular subprocess for bash/cmd
@@ -68,7 +68,7 @@ def run_command(cmd, shell_env, cwd=None, capture_output=False):
                 capture_output=capture_output,
                 text=True,
                 check=True,
-                shell=not isinstance(cmd, list)
+                shell=not isinstance(cmd, list),
             )
         return result
     except subprocess.CalledProcessError as e:
@@ -84,10 +84,10 @@ def get_current_branch():
     """Get the current git branch name."""
     try:
         result = subprocess.run(
-            ['git', 'branch', '--show-current'],
+            ["git", "branch", "--show-current"],
             capture_output=True,
             text=True,
-            check=True
+            check=True,
         )
         return result.stdout.strip()
     except subprocess.CalledProcessError:
@@ -99,10 +99,10 @@ def get_remote_url():
     """Get the remote origin URL."""
     try:
         result = subprocess.run(
-            ['git', 'remote', 'get-url', 'origin'],
+            ["git", "remote", "get-url", "origin"],
             capture_output=True,
             text=True,
-            check=True
+            check=True,
         )
         return result.stdout.strip()
     except subprocess.CalledProcessError:
@@ -114,29 +114,43 @@ def cleanup_test_containers(shell_env, dry_run=False):
     """Clean up existing test containers and volumes."""
     print("🧹 Cleaning up existing test containers and volumes...")
 
-    if shell_env['is_windows']:
+    if shell_env["is_windows"]:
         cleanup_commands = [
             # Stop and remove boundlexx-test containers
-            ("docker ps -a --filter name=boundlexx-test --format '{{.Names}}' | "
-             "ForEach-Object { docker stop $_; docker rm $_ }"),
+            (
+                "docker ps -a --filter name=boundlexx-test --format '{{.Names}}' | "
+                "ForEach-Object { docker stop $_; docker rm $_ }"
+            ),
             # Remove boundlexx-test volumes
-            ("docker volume ls --filter name=boundlexx-test --format '{{.Name}}' | "
-             "ForEach-Object { docker volume rm $_ }"),
+            (
+                "docker volume ls --filter name=boundlexx-test --format '{{.Name}}' | "
+                "ForEach-Object { docker volume rm $_ }"
+            ),
             # Remove boundlexx-test networks
-            ("docker network ls --filter name=boundlexx-test --format '{{.Name}}' | "
-             "ForEach-Object { docker network rm $_ }")
+            (
+                "docker network ls --filter name=boundlexx-test --format '{{.Name}}' | "
+                "ForEach-Object { docker network rm $_ }"
+            ),
         ]
     else:
         # Unix commands
         cleanup_commands = [
-            ("docker ps -a --filter name=boundlexx-test --format '{{.Names}}' | "
-             "xargs -r docker stop"),
-            ("docker ps -a --filter name=boundlexx-test --format '{{.Names}}' | "
-             "xargs -r docker rm"),
-            ("docker volume ls --filter name=boundlexx-test --format '{{.Name}}' | "
-             "xargs -r docker volume rm"),
-            ("docker network ls --filter name=boundlexx-test --format '{{.Name}}' | "
-             "xargs -r docker network rm")
+            (
+                "docker ps -a --filter name=boundlexx-test --format '{{.Names}}' | "
+                "xargs -r docker stop"
+            ),
+            (
+                "docker ps -a --filter name=boundlexx-test --format '{{.Names}}' | "
+                "xargs -r docker rm"
+            ),
+            (
+                "docker volume ls --filter name=boundlexx-test --format '{{.Name}}' | "
+                "xargs -r docker volume rm"
+            ),
+            (
+                "docker network ls --filter name=boundlexx-test --format '{{.Name}}' | "
+                "xargs -r docker network rm"
+            ),
         ]
 
     for cmd in cleanup_commands:
@@ -172,10 +186,20 @@ def clone_test_environment(
     try:
         # Clone the repository
         print(f"   Cloning {remote_url} (branch: {branch_name})...")
-        subprocess.run([
-            'git', 'clone', '--branch', branch_name, '--single-branch',
-            remote_url, str(target_dir)
-        ], check=True, capture_output=True, text=True)
+        subprocess.run(
+            [
+                "git",
+                "clone",
+                "--branch",
+                branch_name,
+                "--single-branch",
+                remote_url,
+                str(target_dir),
+            ],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
 
         print("   ✅ Repository cloned successfully")
         return True
@@ -263,29 +287,31 @@ Examples:
   python create_test_environment.py --skip-cleanup    # Don't clean up old containers
   python create_test_environment.py --start           # Start containers after setup
   python create_test_environment.py --target-dir ../my-test  # Custom test directory
-"""
+""",
     )
 
     parser.add_argument(
-        '--target-dir',
-        help='Target directory for test environment '
-             '(default: ../boundlexx-yatesjj-test)'
+        "--target-dir",
+        help="Target directory for test environment "
+        "(default: ../boundlexx-yatesjj-test)",
     )
     parser.add_argument(
-        '--dry-run', action='store_true',
-        help='Preview operations without making changes'
+        "--dry-run",
+        action="store_true",
+        help="Preview operations without making changes",
     )
     parser.add_argument(
-        '--skip-cleanup', action='store_true',
-        help='Skip cleanup of existing test containers'
+        "--skip-cleanup",
+        action="store_true",
+        help="Skip cleanup of existing test containers",
     )
     parser.add_argument(
-        '--start', action='store_true',
-        help='Start the test environment containers after setup'
+        "--start",
+        action="store_true",
+        help="Start the test environment containers after setup",
     )
     parser.add_argument(
-        '--force', action='store_true',
-        help='Force operations without prompting'
+        "--force", action="store_true", help="Force operations without prompting"
     )
 
     args = parser.parse_args()
@@ -324,10 +350,12 @@ Examples:
 
     # Confirm operation if not forced
     if not args.force and not args.dry_run:
-        prompt = (f"\n💭 Create test environment for branch '{branch_name}' "
-                  f"in '{target_dir}'? (y/N): ")
+        prompt = (
+            f"\n💭 Create test environment for branch '{branch_name}' "
+            f"in '{target_dir}'? (y/N): "
+        )
         response = input(prompt)
-        if response.lower() != 'y':
+        if response.lower() != "y":
             print("❌ Operation cancelled")
             sys.exit(0)
 
@@ -380,5 +408,5 @@ Examples:
         print("      docker-compose run --rm manage python manage.py createsuperuser")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
