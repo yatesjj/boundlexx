@@ -117,6 +117,14 @@ Boundlexx uses a modern GitHub Actions workflow to automate building, testing, a
 
 For a detailed breakdown of the workflow, changes, and rollback instructions, see `docs/modernization/GITHUB_ACTIONS_UPDATE.md`.
 
+### CI/CD Onboarding & Troubleshooting
+
+- **Where to find logs:** All workflow runs and logs are available in the [GitHub Actions tab](https://github.com/yatesjj/boundlexx/actions). Click on a workflow run to see job details, logs, and any errors.
+- **Interpreting failures:** If a job fails, expand the failed step to view error output. Common issues include Docker build errors, test failures, or permission issues with the container registry. See `docs/modernization/WORKFLOW_MONITORING.md` for troubleshooting tips.
+- **Best practices:** Always check the status of the "Test and Lint" and "Build and Push Production Images" jobs after each push or PR. Ensure all jobs are green before merging.
+- **Security reminders:** Periodically review and address security vulnerabilities flagged by Dependabot in the GitHub Security tab. Keep GitHub Actions and Docker images up to date to minimize risk.
+- **Stay current:** Review the workflow and GitHub Actions marketplace for new features or deprecations at least once per quarter. Update action versions and documentation as needed.
+
 ## 🔄 Multi-Environment Workflow (Recommended)
 
 For testing multiple branches/PRs, use **separate folders** for complete isolation:
