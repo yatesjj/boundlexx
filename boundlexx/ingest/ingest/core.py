@@ -51,7 +51,7 @@ def _create_items(items_list, subtitles):
             )
             item_obj.name = compiled_items[string_item_id]["name"]
             subtitle_id = item["subtitle_id"]
-            
+
             # Handle subtitle lookup with proper error handling
             try:
                 item_obj.item_subtitle = subtitles[subtitle_id]
@@ -126,7 +126,7 @@ def _create_colors(color_list):
                     if not found:
                         print(f"[WARNING] Color {color_id} not found, skipping")
                         continue
-                
+
                 _, was_created = ColorValue.objects.get_or_create(
                     color=color,
                     color_type=color_palette["name"],
@@ -161,7 +161,7 @@ def _create_localized_names(lang_name, lang_data, data):
                 click.echo(f"[WARNING] Skipping color_id {color_id} - no color object")
                 pbar.update(1)
                 continue
-                
+
             l, was_created = LocalizedName.objects.get_or_create(
                 game_obj=data["colors"][color_id], lang=lang_name
             )
@@ -180,7 +180,7 @@ def _create_localized_names(lang_name, lang_data, data):
                 click.echo(f"[WARNING] Skipping metal_id {metal_id} - no metal object")
                 pbar.update(1)
                 continue
-                
+
             l, was_created = LocalizedName.objects.get_or_create(
                 game_obj=data["metals"][metal_id], lang=lang_name
             )
@@ -199,7 +199,7 @@ def _create_localized_names(lang_name, lang_data, data):
                 click.echo(f"[WARNING] Skipping item_id {item_id} - no item object")
                 pbar.update(1)
                 continue
-                
+
             l, was_created = LocalizedName.objects.get_or_create(
                 game_obj=data["items"][item_id], lang=lang_name
             )
@@ -218,7 +218,7 @@ def _create_localized_names(lang_name, lang_data, data):
                 click.echo(f"[WARNING] Skipping subtitle_id {subtitle_id} - no object")
                 pbar.update(1)
                 continue
-                
+
             l, was_created = LocalizedName.objects.get_or_create(
                 game_obj=data["subtitles"][subtitle_id], lang=lang_name
             )
@@ -235,14 +235,14 @@ def _create_localized_names(lang_name, lang_data, data):
 
 def _create_localization_data(strings, data, english_only=False):
     click.echo("Processing localization data...")
-    
+
     # If english_only flag is set, only process English
     if english_only:
         languages_to_process = {"english": strings["english"]}
         click.echo("Note: Processing English only (use --all-languages for full)")
     else:
         languages_to_process = strings
-    
+
     for lang_name, lang_data in languages_to_process.items():
         _create_localized_names(lang_name, lang_data, data)
 

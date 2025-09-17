@@ -105,7 +105,7 @@ boundlexx-test-redis-1        redis:5.0            6379/tcp
 
 ## CI/CD & Automated Container Builds
 
-Boundlexx uses a modern GitHub Actions workflow to automate building, testing, and linting of all Docker containers on every push to the default branch. This ensures that the project is always in a deployable state and that container builds are reproducible and reliable.
+Boundlexx uses a modern GitHub Actions workflow to automate building, testing, and linting of all Docker containers on every push to the default branch. This ensures the project is always in a deployable state and that container builds are reproducible and reliable.
 
 - The workflow is defined in `.github/workflows/ci.yml`.
 - On every push, GitHub Actions will:
@@ -115,7 +115,22 @@ Boundlexx uses a modern GitHub Actions workflow to automate building, testing, a
 - Workflow status and logs can be monitored in the GitHub Actions tab.
 - For troubleshooting, see `docs/modernization/WORKFLOW_MONITORING.md`.
 
+**Status:**
+
+- As of September 2025, all CI/CD requirements for [Issue #21](https://github.com/AngellusMortis/boundlexx/issues/21) are fully met:
+   - All container builds, lint, and test jobs pass reliably in GitHub Actions.
+   - Black formatting, ruff, mypy, and pytest are enforced and passing.
+   - The only remaining warning is a harmless git config cleanup message during post-job steps (see workflow logs). This does not affect build or test results.
+
 For a detailed breakdown of the workflow, changes, and rollback instructions, see `docs/modernization/GITHUB_ACTIONS_UPDATE.md`.
+
+### CI/CD Onboarding & Troubleshooting
+
+- **Where to find logs:** All workflow runs and logs are available in the [GitHub Actions tab](https://github.com/yatesjj/boundlexx/actions). Click on a workflow run to see job details, logs, and any errors.
+- **Interpreting failures:** If a job fails, expand the failed step to view error output. Common issues include Docker build errors, test failures, or permission issues with the container registry. See `docs/modernization/WORKFLOW_MONITORING.md` for troubleshooting tips.
+- **Best practices:** Always check the status of the "Test and Lint" and "Build and Push Production Images" jobs after each push or PR. Ensure all jobs are green before merging.
+- **Security reminders:** Periodically review and address security vulnerabilities flagged by Dependabot in the GitHub Security tab. Keep GitHub Actions and Docker images up to date to minimize risk.
+- **Stay current:** Review the workflow and GitHub Actions marketplace for new features or deprecations at least once per quarter. Update action versions and documentation as needed.
 
 ## 🔄 Multi-Environment Workflow (Recommended)
 

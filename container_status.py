@@ -69,7 +69,7 @@ def check_container_status():
         print(f"  📡 {host_port}:{container_port}{offset_info}")
 
     # Determine configuration type
-    print(f"\nConfiguration Analysis:")
+    print("\nConfiguration Analysis:")
     if has_prefixes and not ports_found:
         print("  🔧 Development setup detected (prefixed names, no port offsets)")
     elif has_prefixes and any(int(hp) != int(cp) for hp, cp in ports_found):
@@ -86,7 +86,7 @@ def check_container_status():
         for pfile in parallel_files:
             print(f"  🔄 {pfile.name}")
 
-    print(f"\nRecommendations:")
+    print("\nRecommendations:")
     if not has_prefixes:
         print("  • Run setup_development_container.py to add name prefixes")
     if not container_names:
@@ -99,7 +99,7 @@ def main():
     parser = argparse.ArgumentParser(
         description="Check container management configuration status"
     )
-    args = parser.parse_args()
+    parser.parse_args()
     check_container_status()
 
 

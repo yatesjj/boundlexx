@@ -26,7 +26,7 @@ def get_environment_choice():
     print("  1. Development (boundlexx-*, Django on port 28000)")
     print("  2. Test (boundlexx-test-*, Django on port 28001)")
     print()
-    
+
     while True:
         choice = input("Enter choice (1 or 2): ").strip()
         if choice == "1":
@@ -270,32 +270,35 @@ networks:
 def update_devcontainer_config(env_type, dry_run=False):
     """Update devcontainer.json for the selected environment."""
     devcontainer_path = Path(".devcontainer/devcontainer.json")
-    
+
     if not devcontainer_path.exists():
         print(f"ℹ️  No devcontainer.json found at {devcontainer_path}, skipping...")
         return True
-    
+
     try:
         # Read current devcontainer.json
-        with open(devcontainer_path, 'r', encoding='utf-8') as f:
+        with open(devcontainer_path, "r", encoding="utf-8") as f:
             content = f.read()
-        
+
         # Determine new port based on environment
         new_port = 28000 if env_type == "dev" else 28001
-        
+
         # Use regex to find and update forwardPorts
         import re
+
         port_pattern = r'"forwardPorts"\s*:\s*\[\s*(\d+)\s*\]'
         match = re.search(port_pattern, content)
-        
+
         if match:
             old_port = int(match.group(1))
             if old_port == new_port:
                 if not dry_run:
-                    print(f"ℹ️  devcontainer.json already configured for "
-                          f"port {new_port}")
+                    print(
+                        f"ℹ️  devcontainer.json already configured for "
+                        f"port {new_port}"
+                    )
                 return True
-            
+
             if dry_run:
                 print("📋 Would update devcontainer.json:")
                 print(f"   forwardPorts: [{old_port}] → [{new_port}]")
@@ -304,12 +307,12 @@ def update_devcontainer_config(env_type, dry_run=False):
                 new_content = re.sub(
                     port_pattern,
                     f'"forwardPorts": [\n        {new_port}\n    ]',
-                    content
+                    content,
                 )
-                
-                with open(devcontainer_path, 'w', encoding='utf-8') as f:
+
+                with open(devcontainer_path, "w", encoding="utf-8") as f:
                     f.write(new_content)
-                
+
                 print("✅ Updated devcontainer.json:")
                 print(f"   forwardPorts: [{old_port}] → [{new_port}]")
         else:
@@ -317,9 +320,9 @@ def update_devcontainer_config(env_type, dry_run=False):
                 print("📋 No forwardPorts found in devcontainer.json to update")
             else:
                 print("ℹ️  No forwardPorts found in devcontainer.json to update")
-        
+
         return True
-        
+
     except Exception as e:
         print(f"⚠️  Warning: Could not update devcontainer.json: {e}")
         return True  # Don't fail the whole setup for this
@@ -327,7 +330,7 @@ def update_devcontainer_config(env_type, dry_run=False):
 
 def setup_environment(env_type, dry_run=False, force=False):
     """Set up the specified environment."""
-    
+
     # Auto-copy .env to .local.env if missing
     env_file = Path(".env")
     local_env_file = Path(".local.env")
@@ -360,7 +363,7 @@ def setup_environment(env_type, dry_run=False, force=False):
     if override_path.exists() and not force and not dry_run:
         prompt = f"\n⚠️  {override_path} already exists. Overwrite? (y/N): "
         overwrite = input(prompt).strip().lower()
-        if overwrite != 'y':
+        if overwrite != "y":
             print("❌ Setup cancelled")
             return False
 
@@ -372,7 +375,7 @@ def setup_environment(env_type, dry_run=False, force=False):
         else:
             preview = override_content
         print(preview)
-        
+
         # Also preview devcontainer updates
         update_devcontainer_config(env_type, dry_run=True)
         return True
@@ -396,7 +399,7 @@ def setup_environment(env_type, dry_run=False, force=False):
     print("   2. Check status: docker ps")
     print("   3. Run migrations:")
     print("      docker-compose run --rm manage python manage.py migrate")
-    
+
     return True
 
 
@@ -410,20 +413,23 @@ Examples:
   python setup_containers.py --env dev          # Development setup
   python setup_containers.py --env test         # Test setup
   python setup_containers.py --env dev --dry-run  # Preview dev setup
-"""
+""",
     )
-    
+
     parser.add_argument(
-        '--env', choices=['dev', 'test'],
-        help='Environment type: dev (port 28000) or test (port 28001)'
-    )
-    parser.add_argument(
-        '--dry-run', action='store_true',
-        help='Preview configuration without writing files'
+        "--env",
+        choices=["dev", "test"],
+        help="Environment type: dev (port 28000) or test (port 28001)",
     )
     parser.add_argument(
-        '--force', action='store_true',
-        help='Overwrite existing files without prompting'
+        "--dry-run",
+        action="store_true",
+        help="Preview configuration without writing files",
+    )
+    parser.add_argument(
+        "--force",
+        action="store_true",
+        help="Overwrite existing files without prompting",
     )
 
     args = parser.parse_args()
@@ -433,12 +439,12 @@ Examples:
         args.env = get_environment_choice()
 
     success = setup_environment(args.env, dry_run=args.dry_run, force=args.force)
-    
+
     if not success:
         sys.exit(1)
 
     print("\n✨ Setup complete!")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

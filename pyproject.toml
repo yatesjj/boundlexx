@@ -112,14 +112,19 @@ extend-exclude = [
   "node_modules",
 ]
 
+
+[tool.ruff.lint]
 # Enable rule sets: (E,F) pycodestyle/pyflakes, I import sorting, B bugbear, N pep8-naming, UP pyupgrade, DJ Django
-lint.select = ["E", "F", "I", "B", "N", "UP", "DJ"]
-lint.ignore = [
+select = ["E", "F", "I", "B", "N", "UP", "DJ"]
+ignore = [
   # Existing stylistic allowances carried over from prior config
   "E501",  # line length handled separately / already enforced logically
   "B008",  # function call in default argument (common in Django patterns)
 ]
-lint.per-file-ignores = { "tests/*" = ["S101"], "*/migrations/*" = ["ALL"] }
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["S101"]
+"*/migrations/*" = ["ALL"]
 
 [tool.ruff.lint.isort]
 known-first-party = ["boundlexx"]
@@ -152,5 +157,3 @@ pretty = true
 [tool.django-stubs]
 django_settings_module = "config.settings.test"
 
-[tool.mypy.plugins.django-stubs]
-django_settings_module = "config.settings.test"
