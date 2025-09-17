@@ -142,6 +142,27 @@ This folder-based naming ensures complete isolation between environments, preven
 ### Testing Workflow:
 **For detailed testing workflows, see:** `docs/modernization/ENVIRONMENT_SETUP.md`
 
+### Multiple Testing Approaches:
+The project supports multiple testing strategies for different use cases:
+
+1. **Physical Environment Isolation:** 
+   - Separate clone directories (e.g., `boundlexx-yatesjj-test`)
+   - Container isolation with folder-based naming
+   - Port isolation (dev: 28000, test: 28001)
+   - Complete environment separation for full integration testing
+
+2. **Database-Level Isolation (.test.env):**
+   - Uses `test_boundlexx` database instead of `boundlexx`
+   - Same containers and infrastructure as development
+   - Ideal for unit tests, CI/CD, and rapid database testing
+   - Complements rather than conflicts with physical isolation
+
+3. **Usage Guidelines:**
+   - **Quick database testing:** Use `.test.env` for rapid database-focused testing
+   - **Full environment testing:** Use separate clone setup for complete isolation
+   - **Automated testing/CI:** Use `.test.env` for pipelines where full container isolation isn't needed
+   - **Data experimentation:** Use `.test.env` for testing schema changes or ingestion logic
+
 # Copilot Instructions for Boundlexx Modernization
 
 ## Project Overview
@@ -181,6 +202,8 @@ Boundlexx is a Django monorepo for Boundless game data, supporting both containe
 - **Testing:**
   - `docker-compose run test` (pytest, coverage)
   - Test config: `[tool.pytest.ini_options]` in `pyproject.toml`
+  - **Database isolation:** Use `.test.env` for isolated test database (`test_boundlexx`)
+  - **Environment isolation:** Use separate clone directories for complete test environments
 - **Background Tasks:**
   - Celery: `docker-compose up celery celerybeat`
   - Huey: `docker-compose up huey-consumer huey-scheduler`
