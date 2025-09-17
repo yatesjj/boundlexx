@@ -333,7 +333,8 @@ def setup_environment(env_type, dry_run=False, force=False):
     local_env_file = Path(".local.env")
     if not local_env_file.exists() and env_file.exists():
         if not dry_run:
-            local_env_file.write_text(env_file.read_text())
+            # Use binary mode to preserve line endings (especially Linux LF)
+            local_env_file.write_bytes(env_file.read_bytes())
             print(f"✅ Created {local_env_file} from {env_file}")
         else:
             print(f"📋 Would create {local_env_file} from {env_file}")
