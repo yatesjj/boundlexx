@@ -53,7 +53,7 @@ Setup
 
 **Modernization Note:**
 
-This fork is undergoing modernization guided by patterns from `ark-operator <https://github.com/AngellusMortis/ark-operator>`_, including simplified structure, updated dependencies, and improved CI/CD.
+This fork is undergoing modernization, including a switch to GitHub Container Registry (GHCR) for all image pushes. Dependency upgrades (Python 3.10+, Django 4.2+) are in progress on feature/dependency-upgrade branch to resolve 134 Dependabot vulnerabilities.
 
 **Project Structure:**
 
@@ -111,7 +111,7 @@ Verify your containers are properly named:
 
 .. code-block:: bash
 
-   docker ps --format "table {{.Names}}\t{{.Image}}"
+   docker ps --format "table {{.Names}}\t{{.Image}}\t{{.Ports}}"
 
 Expected output: `boundlexx-yatesjj-django-1`, `boundlexx-yatesjj-postgres-1`, etc.
 

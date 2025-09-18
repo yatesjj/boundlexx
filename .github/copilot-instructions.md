@@ -45,7 +45,7 @@
 ### 🚀 Fast Development Setup (Recommended)
 For faster development iterations, use English-only setup which reduces database size by ~80% (2,190 vs 10,964 LocalizedString objects):
 
-1. **English-only setup:** "Boundlexx: Fast Setup - English Only" 
+1. **English-only setup:** "Boundlexx: Fast Setup - English Only"
 2. **Add languages later:** "Boundlexx: Add Remaining Languages" when needed
 
 ### 🚨 Critical Requirements
@@ -89,20 +89,20 @@ python manage.py create_game_objects --recipe
   - Use VS Code tasks for all management commands.
 
 2. **Issue-by-Issue Plan**
-  - Update Github Actions: Review modern workflows, update, and validate.
+  - Update Github Actions: Review modern workflows, update, and validate. **COMPLETE ✅** (2025-09-16: Workflow simplified, uses GHCR, validated with tests/lint/build-push)
   - Simplify/Update Project Structure: Refactor to match modern standards, test all commands.
   - Replace DRF with Django Ninja: Prototype v2 API, maintain compatibility, or create v3 if needed.
   - Replace Celery with TaskIQ: Migrate tasks incrementally, validate, keep Celery until proven.
-  - Update Requirements Management: Move to `pyproject.toml` and `uv`, keep old files until validated.
+  - Update Requirements Management: Move to `pyproject.toml` and `uv`, keep old files until validated. **IN PROGRESS (Dependency/Upgrade Cluster)**
   - Update Linters: Add Ruff and mypy, incrementally fix issues, then remove old linters.
   - Raise Code Coverage: Add/expand tests to reach 85%+.
   - Remove Huey: Convert tasks to Celery/TaskIQ, validate, then remove Huey.
   - Move setup.cfg into pyproject.toml: Migrate configs, test, remove old config after validation.
   - Rename Container Images: Update Dockerfiles/Compose, test builds and runs.
   - Fix Steam Login: Update scripts for Steam login, test with 2FA/session tickets.
-  - Update to Django 4.2+: Upgrade incrementally, resolve deprecations, update dependencies, test after each step.
-  - Update to Python 3.10+: Update Dockerfiles, CI, and envs, test all services and dependencies.
-  - Ensure Containers Build in GHA: Update workflows to build/test containers on push.
+  - Update to Django 4.2+: Upgrade incrementally, resolve deprecations, update dependencies, test after each step. **IN PROGRESS (Dependency/Upgrade Cluster)**
+  - Update to Python 3.10+: Update Dockerfiles, CI, and envs, test all services and dependencies. **IN PROGRESS (Dependency/Upgrade Cluster)**
+  - Ensure Containers Build in GHA: Update workflows to build/test containers on push. **COMPLETE ✅** (2025-09-16: Resolved Issue #21, builds/pushes to GHCR on master)
 
 3. **Research & Conflict Mitigation**
   - Review official docs for Django, Python, TaskIQ, Django Ninja, Ruff, uv, Docker, and CI/CD.
@@ -118,7 +118,8 @@ python manage.py create_game_objects --recipe
 5. **Next Steps**
   - Archive or remove `template_examples` to avoid confusion.
   - Begin with environment backup and branch setup.
-  - Start with the first actionable issue (GHA update), documenting every step.
+  - Start with the first actionable issue (GHA update), documenting every step. **COMPLETE ✅**
+  - Current Focus: Dependency/Upgrade Cluster (Python 3.10+, Django 4.2+, Requirements to pyproject.toml/uv, Resolve Dependabot alerts). Findings: 134 vulnerabilities (10 critical); docs updated for GHCR; Dockerfile uses Python 3.9 (to be upgraded).
 
 **Pause before making any environment changes.**
 
@@ -126,7 +127,7 @@ python manage.py create_game_objects --recipe
 
 ### Production-Ready Container Scripts:
 - `setup_development_container_improved.py` - Main development environments (Django port 28000)
-- `setup_test_container.py` - Test environments (Django port 28001, others internal)  
+- `setup_test_container.py` - Test environments (Django port 28001, others internal)
 - `container_status.py` - Status monitoring utility
 
 ### Container Setup:
@@ -152,7 +153,7 @@ This folder-based naming ensures complete isolation between environments, preven
 ### Multiple Testing Approaches:
 The project supports multiple testing strategies for different use cases:
 
-1. **Physical Environment Isolation:** 
+1. **Physical Environment Isolation:**
    - Separate clone directories (e.g., `boundlexx-yatesjj-test`)
    - Container isolation with folder-based naming
    - Port isolation (dev: 28000, test: 28001)
