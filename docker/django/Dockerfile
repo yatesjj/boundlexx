@@ -1,12 +1,7 @@
 # base image used by other stages
 
 
-FROM python:3.9-slim-buster AS base
-
-# Fix for Debian Buster EOL: use archive URLs and disable apt signature date check
-RUN sed -i 's|http://deb.debian.org/debian|http://archive.debian.org/debian|g' /etc/apt/sources.list \
-  && sed -i 's|http://security.debian.org/debian-security|http://archive.debian.org/debian-security|g' /etc/apt/sources.list \
-  && echo 'Acquire::Check-Valid-Until "false";' > /etc/apt/apt.conf.d/99no-check-valid-until
+FROM python:3.12-slim-bookworm AS base
 
 ARG DJANGO_UID=1000
 
@@ -20,7 +15,7 @@ RUN addgroup --system --gid ${DJANGO_UID} django \
   && adduser --system --shell /bin/bash --uid ${DJANGO_UID} --ingroup django django
 
 RUN apt-get update \
-  && apt-get install -y libpq-dev gettext nodejs npm git python3-mpltoolkits.basemap python3-pillow lsb-release \
+  && apt-get install -y libpq-dev gettext nodejs npm git python3-pillow lsb-release \
   && npm install -g steam-user@4.19.12 \
   && pip install pip --upgrade \
   # cleaning up unused files
@@ -52,7 +47,7 @@ FROM base AS production
 ENV PYTHONDONTWRITEBYTECODE 1
 
 COPY --from=builder /usr/local/bin/ /usr/local/bin/
-COPY --from=builder /usr/local/lib/python3.9/ /usr/local/lib/python3.9/
+COPY --from=builder /usr/local/lib/python3.12/ /usr/local/lib/python3.12/
 COPY --chown=django:django ./docker/django/production/start /usr/local/bin/start
 COPY --chown=django:django ./manage.py /app/manage.py
 COPY --chown=django:django ./locale /app/locale
@@ -76,7 +71,7 @@ FROM base AS dev
 ENV PYTHONDONTWRITEBYTECODE 1
 
 COPY --from=builder-dev /usr/local/bin/ /usr/local/bin/
-COPY --from=builder-dev /usr/local/lib/python3.9/ /usr/local/lib/python3.9/
+COPY --from=builder-dev /usr/local/lib/python3.12/ /usr/local/lib/python3.12/
 COPY --chown=django:django ./docker/django/dev/start /usr/local/bin/start
 
 RUN chmod +x /usr/local/bin/start \

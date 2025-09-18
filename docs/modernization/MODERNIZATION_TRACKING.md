@@ -155,6 +155,104 @@ This document tracks all technical changes, findings, and decisions made during 
 - **How to Roll Back:**
   - Revert changes to the above files from git history.
 
+### 2. Comprehensive Upgrade Plan Development (Python 3.12 + Django 5.1)
+- **Description:** Developed detailed upgrade strategy targeting Python 3.12.10 + Django 5.1 instead of incremental 3.10 + 4.2 approach. Created comprehensive documentation covering 7 phases with rollback points, risk mitigation, and issue anticipation.
+- **Rationale:** Option B (big bang upgrade) addresses more modernization goals simultaneously, provides better long-term positioning (2028+ support), and resolves more Dependabot vulnerabilities in one cycle. Forward-looking approach minimizes future upgrade debt.
+- **Strategy Components:**
+  - **7-Phase Plan:** Infrastructure → Database → Django Core → Dependencies → Dev Tools → Testing → Cleanup
+  - **Risk Mitigation:** Git tags at each phase, comprehensive testing, rollback procedures
+  - **Issue Anticipation:** psycopg2→3 migration, admin template changes, DRF compatibility
+  - **Success Metrics:** Technical, business, and modernization goals clearly defined
+- **Files Created:**
+  - `docs/modernization/PYTHON312_DJANGO51_UPGRADE_PLAN.md` (comprehensive strategy)
+  - `docs/modernization/UPGRADE_DECISION_MATRIX.md` (quick reference, go/no-go criteria)
+- **Todo List:** Created 7-phase structured todo list for progress tracking
+- **How to Roll Back:**
+  - Revert to `pre-dependency-upgrade` tag
+  - Delete upgrade plan documents if approach changes
+  - Switch to incremental 3.10 + 4.2 approach if needed
+
+### 3. Pre-Upgrade Tagging and Branch Setup
+- **Description:** Created `pre-dependency-upgrade` git tag as safety net before beginning major dependency upgrades. Established feature branch `feature/dependency-upgrade` for all upgrade work.
+- **Rationale:** Following modernization plan requirement to tag before major changes. Provides clean rollback point if upgrade encounters insurmountable issues.
+- **Setup Complete:** Ready to begin Phase 1 (Infrastructure Foundation) of upgrade plan
+
+---
+
+## 2025-09-17: Dependency Modernization Planning & Upstream Analysis - COMPLETE ✅
+
+### 13. Comprehensive Upstream Issues Analysis (#21-34)
+- **Description:** Completed systematic review of all upstream modernization issues to understand relationship with our Python 3.12 + Django 5.1 upgrade plan.
+- **Rationale:** Ensure our comprehensive upgrade strategy aligns with upstream priorities and avoids conflicts with ongoing work.
+- **Key Findings:**
+  - **✅ Issues Directly Addressed:** #21 (CI/CD), #22 (Python 3.10+), #23 (Django 4.2+), #30 (requirements), #34 (GitHub Actions)
+  - **🔄 Active Development:** #24 (Steam Login - Node.js auth by Redlotus99, independent of our upgrades)
+  - **📝 Configuration Work:** #26 (setup.cfg→pyproject.toml), #29 (Ruff+mypy), align with our Phase 5
+  - **🗑️ Cleanup Tasks:** #27 (Remove Huey), #28 (Coverage 85%+), post-upgrade activities
+  - **🚀 Future Major Changes:** #31 (TaskIQ), #32 (Django Ninja), #33 (Project structure), separate projects
+- **Strategic Outcome:** No conflicts identified; our upgrade plan provides solid foundation for all future modernization work
+- **Files Updated:**
+  - `docs/modernization/PYTHON312_DJANGO51_UPGRADE_PLAN.md` (added upstream issues analysis section)
+- **Next Actions:**
+  - Proceed with Phase 2 (Database Compatibility) of upgrade plan
+  - Consider integrating compatible issues (#26, #29, #30) into Phase 5
+- **How to Roll Back:**
+  - Revert analysis section from upgrade plan document if strategic direction changes
+
+---
+
+## 2025-09-18: Phase 2 Database Compatibility Testing - IN PROGRESS
+
+### 40. Discovered Critical Dependency Incompatibilities
+- **Description:** Docker build failing with Python 3.12 due to `gevent==21.12.0` compilation errors. Greenlet package incompatible with Python 3.12 internal API changes.
+- **Rationale:** Expected compatibility issues with older packages that haven't been updated for Python 3.12.
+- **Error Details:** 
+  - `PyThreadState` struct member changes (`recursion_limit` → `py_recursion_limit`)
+  - `_PyCFrame` struct member changes (`use_tracing` removed)
+  - Affects gevent, which is pulled in by steam[client] package
+- **Files Affected:**
+  - `requirements/production.txt` (gevent==21.12.0)
+  - `requirements/in/base.in` (django<4.0 constraint)
+- **How to Roll Back:**
+  - Revert Dockerfile to Python 3.10 if dependency resolution fails
+  - Use `git checkout post-python-upgrade` tag after fixing
+
+### 41. Updated Documentation for Container-First Development
+- **Description:** Enhanced upgrade plan documentation to emphasize container-only operations to prevent host environment pollution.
+- **Rationale:** Working in Windows host environment requires strict container isolation to avoid affecting global Python installation.
+- **Files Changed:**
+  - `docs/modernization/PYTHON312_DJANGO51_UPGRADE_PLAN.md`
+  - `docs/modernization/MODERNIZATION_TRACKING.md`
+- **Key Guidelines:**
+  - All Python operations must use `docker-compose run` commands
+  - No direct pip/python commands on host
+  - Container-based testing and validation only
+### 42. MAJOR SUCCESS: Phase 2 Database Compatibility Completed ✅
+- **Description:** Successfully resolved all Python 3.12 compatibility issues and achieved working database connectivity with modern dependency stack.
+- **Key Achievements:**
+  - **Container builds successfully** with Python 3.12.10 base image
+  - **Database connectivity working** - PostgreSQL connections, migrations, Django ORM functional
+  - **Updated dependencies:** Django 4.0.10, Celery 5.5.3, psycopg2-binary, all latest versions
+  - **Requirements resolution:** Both production.txt and dev.txt updated for Python 3.12 compatibility
+  - **Dockerfile fixes:** All Python paths updated from 3.10 to 3.12
+- **Testing Results:**
+  - ✅ `docker-compose build django` - SUCCESS
+  - ✅ `docker-compose run --rm django python manage.py check` - No issues
+  - ✅ `docker-compose run --rm django python manage.py showmigrations` - Schema working
+  - ✅ `docker-compose run --rm django python manage.py collectstatic` - Static files working
+- **Temporary Changes:**
+  - `steam[client]` package temporarily commented out (gevent incompatibility)
+  - Switched from `psycopg2 --no-binary` to `psycopg2-binary` for Python 3.12 compatibility
+- **Files Modified:**
+  - `docker/django/Dockerfile` (Python 3.12 base image + paths)
+  - `requirements/in/base.in` (Django 4.0.x, psycopg2-binary)
+  - `requirements/production.txt` (regenerated)
+  - `requirements/dev.txt` (regenerated)
+- **Next Steps:** Ready for Phase 3 (Django 5.1 upgrade)
+- **How to Roll Back:**
+  - Use `git checkout post-python-upgrade` tag
+  - Restore original requirements files from backup (requirements/*_old.txt)
+
 ---
 
 ## Documentation Guidelines
