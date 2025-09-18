@@ -100,12 +100,19 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # Build and push - adjust tags for fork vs upstream
+      - name: Set image tags
+        id: set-tags
+        run: |
+          if [ "${{ github.repository_owner }}" == "yatesjj" ]; then
+            echo "tags=${{ github.repository_owner }}/boundlexx:latest" >> $GITHUB_OUTPUT
+          else
+            echo "tags=ghcr.io/${{ github.repository }}:latest" >> $GITHUB_OUTPUT
+          fi
+
+      # Build and push with dynamic tags
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
           context: .
           push: true
-          tags: |
-            ${{ github.repository_owner }}/boundlexx:latest  # For your fork (e.g., yatesjj/boundlexx:latest on Docker Hub)
-            ghcr.io/${{ github.repository }}:latest  # For upstream
+          tags: ${{ steps.set-tags.outputs.tags }}
