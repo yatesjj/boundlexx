@@ -100,19 +100,30 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Set image tags
-        id: set-tags
+      - name: Set registry
+        id: set-registry
         run: |
           if [ "${{ github.repository_owner }}" == "yatesjj" ]; then
-            echo "tags=${{ github.repository_owner }}/boundlexx:latest" >> $GITHUB_OUTPUT
+            echo "registry=" >> $GITHUB_OUTPUT  # Empty for Docker Hub
           else
-            echo "tags=ghcr.io/${{ github.repository }}:latest" >> $GITHUB_OUTPUT
+            echo "registry=ghcr.io/" >> $GITHUB_OUTPUT
           fi
 
-      # Build and push with dynamic tags
-      - name: Build and push Docker image
+      # Build and push django production image
+      - name: Build and push django image
         uses: docker/build-push-action@v5
         with:
           context: .
+          file: ./docker/django/Dockerfile
+          target: production
           push: true
-          tags: ${{ steps.set-tags.outputs.tags }}
+          tags: ${{ steps.set-registry.outputs.registry }}${{ github.repository_owner }}/boundlexx-django:latest
+
+      # Build and push postgres image
+      - name: Build and push postgres image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./docker/postgres/Dockerfile
+          push: true
+          tags: ${{ steps.set-registry.outputs.registry }}${{ github.repository_owner }}/boundlexx-postgres:latest
