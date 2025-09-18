@@ -74,7 +74,7 @@ jobs:
     name: Build and Push Production Images
     needs: test
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/feature/test-build-push')
 
     steps:
       - name: Checkout Repository
