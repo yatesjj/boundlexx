@@ -117,7 +117,7 @@ jobs:
           file: ./docker/django/Dockerfile
           target: production
           push: true
-          tags: ${{ steps.set-registry.outputs.registry }}${{ github.repository_owner }}/boundlexx-django:latest
+          tags: ${{ steps.set-registry.outputs.registry }}${{ github.repository_owner }}/boundlexx_django:latest
 
       # Build and push postgres image
       - name: Build and push postgres image
@@ -126,4 +126,4 @@ jobs:
           context: .
           file: ./docker/postgres/Dockerfile
           push: true
-          tags: ${{ steps.set-registry.outputs.registry }}${{ github.repository_owner }}/boundlexx-postgres:latest
+          tags: ${{ steps.set-registry.outputs.registry }}${{ github.repository_owner }}/boundlexx_postgres:latest
