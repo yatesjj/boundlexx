@@ -10,9 +10,12 @@ ENV PYTHONPATH /app
 ENV PYTEST ""
 ENV DJANGO_MANAGE ""
 ENV HUEY_WORKER_COUNT 2
+ENV HOME /home/django
 
 RUN addgroup --system --gid ${DJANGO_UID} django \
-  && adduser --system --shell /bin/bash --uid ${DJANGO_UID} --ingroup django django
+  && adduser --system --shell /bin/bash --uid ${DJANGO_UID} --ingroup django --home /home/django django \
+  && mkdir -p /home/django \
+  && chown django:django /home/django
 
 RUN apt-get update \
   && apt-get install -y libpq-dev gettext nodejs npm git python3-pillow lsb-release \
@@ -27,6 +30,7 @@ COPY ./docker/bin/* /usr/local/bin/
 RUN chmod +x /usr/local/bin/steam-auth-ticket /usr/local/bin/convert-atlas /usr/local/bin/lint-code /usr/local/bin/format-code /usr/local/bin/entrypoint /usr/local/bin/start-celerybeat /usr/local/bin/start-celeryworker /usr/local/bin/start-huey-consumer /usr/local/bin/start-huey-scheduler
 RUN mkdir -p /app/.steam
 RUN chown -R django:django /app
+RUN chown -R django:django /home/django
 
 
 # production builder

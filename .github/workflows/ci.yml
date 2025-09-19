@@ -51,17 +51,17 @@ jobs:
 
       - name: Pull cached images
         run: |
-          docker pull ${{ env.REGISTRY }}/angellusmortis/boundlexx_postgres:latest || true
-          docker pull ${{ env.REGISTRY }}/angellusmortis/boundlexx_django:latest || true
-          docker pull ${{ env.REGISTRY }}/angellusmortis/boundlexx_dev_django:latest || true
+          docker pull ${{ env.REGISTRY }}/angellusmortis/boundlexx-postgres:latest || true
+          docker pull ${{ env.REGISTRY }}/angellusmortis/boundlexx-django:latest || true
+          docker pull ${{ env.REGISTRY }}/angellusmortis/boundlexx-django-dev:latest || true
 
       - name: Build CI images
         run: docker compose build postgres test lint
 
       - name: Cache dev Django image
         run: |
-          docker tag boundlexx_dev_django ${{ env.REGISTRY }}/angellusmortis/boundlexx_dev_django:latest
-          docker push ${{ env.REGISTRY }}/angellusmortis/boundlexx_dev_django:latest || true
+          docker tag boundlexx-django-dev ${{ env.REGISTRY }}/angellusmortis/boundlexx-django-dev:latest
+          docker push ${{ env.REGISTRY }}/angellusmortis/boundlexx-django-dev:latest || true
 
       - name: Run linters
         run: docker compose run --rm lint
@@ -99,7 +99,7 @@ jobs:
           file: ./docker/django/Dockerfile
           target: production
           push: true
-          tags: ghcr.io/${{ github.repository_owner }}/boundlexx_django:latest
+          tags: ghcr.io/${{ github.repository_owner }}/boundlexx-django:latest
 
       # Build and push postgres image
       - name: Build and push postgres image
@@ -108,4 +108,4 @@ jobs:
           context: .
           file: ./docker/postgres/Dockerfile
           push: true
-          tags: ghcr.io/${{ github.repository_owner }}/boundlexx_postgres:latest
+          tags: ghcr.io/${{ github.repository_owner }}/boundlexx-postgres:latest

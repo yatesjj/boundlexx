@@ -92,9 +92,11 @@ def render_discord_messages(is_huey: bool, **kwargs) -> list[dict]:
         if index == 0:
             messages.append(
                 {
-                    "content": huey_template(task, lines)
-                    if is_huey
-                    else celery_template(task, lines)
+                    "content": (
+                        huey_template(task, lines)
+                        if is_huey
+                        else celery_template(task, lines)
+                    )
                 }
             )
         else:

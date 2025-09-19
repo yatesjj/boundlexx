@@ -3,8 +3,10 @@
 Unified Boundlexx Container Setup Script
 
 Creates Docker Compose override configurations for:
-- Development environments (boundlexx prefix, Django on port 28000)
-- Test environments (boundlexx-test prefix, Django on port 28001)
+- Development environments (Django on port 28000)
+- Test environments (test- prefix, Django on port 28001)
+
+All naming is handled by Docker Compose project naming (folder-based).
 
 Usage:
     python setup_containers.py                    # Interactive mode
@@ -23,8 +25,8 @@ def get_environment_choice():
     print("\n🐳 Boundlexx Container Setup")
     print("=" * 40)
     print("Choose your environment type:")
-    print("  1. Development (boundlexx-*, Django on port 28000)")
-    print("  2. Test (boundlexx-test-*, Django on port 28001)")
+    print("  1. Development (Django on port 28000)")
+    print("  2. Test (test- prefix, Django on port 28001)")
     print()
 
     while True:
@@ -41,12 +43,11 @@ def create_development_override():
     """Create development environment configuration."""
     return """# Auto-generated development environment override
 # Environment: Development
-# Prefix: boundlexx
 # Django port: 28000
 
 services:
   django: &django
-    container_name: boundlexx-django-1
+    container_name: django-1
     env_file:
       - ./.env
       - ./.local.env
@@ -62,69 +63,69 @@ services:
       - postgres
       - redis
     networks:
-      - boundlexx-network
+      - app-network
 
   manage:
     <<: *django
-    container_name: boundlexx-manage-1
+    container_name: manage-1
     ports: []
 
   test:
     <<: *django
-    container_name: boundlexx-test-1
+    container_name: test-1
     ports: []
 
   lint:
     <<: *django
-    container_name: boundlexx-lint-1
+    container_name: lint-1
     ports: []
 
   format:
     <<: *django
-    container_name: boundlexx-format-1
+    container_name: format-1
     ports: []
 
   celery:
     <<: *django
-    container_name: boundlexx-celery-1
+    container_name: celery-1
     ports: []
 
   celerybeat:
     <<: *django
-    container_name: boundlexx-celerybeat-1
+    container_name: celerybeat-1
     ports: []
 
   huey-consumer:
     <<: *django
-    container_name: boundlexx-huey-consumer-1
+    container_name: huey-consumer-1
     ports: []
 
   huey-scheduler:
     <<: *django
-    container_name: boundlexx-huey-scheduler-1
+    container_name: huey-scheduler-1
     ports: []
 
   postgres:
-    container_name: boundlexx-postgres-1
+    container_name: postgres-1
     volumes:
-      - boundlexx_postgres_data:/var/lib/postgresql/data
+      - postgres-data:/var/lib/postgresql/data
     env_file:
       - ./.env
       - ./.local.env
     networks:
-      - boundlexx-network
+      - app-network
 
   redis:
-    container_name: boundlexx-redis-1
+    container_name: redis-1
     networks:
-      - boundlexx-network
+      - app-network
 
 volumes:
-  boundlexx_postgres_data:
+  postgres-data:
 
 networks:
-  boundlexx-network:
-    name: boundlexx-network
+  app-network:
+    name: app-network
     driver: bridge
 """
 
@@ -133,12 +134,11 @@ def create_test_override():
     """Create test environment configuration."""
     return """# Auto-generated test environment override
 # Environment: Test
-# Prefix: boundlexx-test
 # Django port: 28001
 
 services:
   django:
-    container_name: boundlexx-test-django-1
+    container_name: test-django-1
     env_file:
       - ./.env
       - ./.local.env
@@ -154,10 +154,10 @@ services:
       - postgres
       - redis
     networks:
-      - boundlexx-test-network
+      - test-app-network
 
   manage:
-    container_name: boundlexx-test-manage-1
+    container_name: test-manage-1
     env_file:
       - ./.env
       - ./.local.env
@@ -165,10 +165,10 @@ services:
       - postgres
       - redis
     networks:
-      - boundlexx-test-network
+      - test-app-network
 
   test:
-    container_name: boundlexx-test-test-1
+    container_name: test-test-1
     env_file:
       - ./.env
       - ./.local.env
@@ -176,28 +176,28 @@ services:
       - postgres
       - redis
     networks:
-      - boundlexx-test-network
+      - test-app-network
 
   lint:
-    container_name: boundlexx-test-lint-1
+    container_name: test-lint-1
     env_file:
       - ./.env
       - ./.local.env
     depends_on: []
     networks:
-      - boundlexx-test-network
+      - test-app-network
 
   format:
-    container_name: boundlexx-test-format-1
+    container_name: test-format-1
     env_file:
       - ./.env
       - ./.local.env
     depends_on: []
     networks:
-      - boundlexx-test-network
+      - test-app-network
 
   celery:
-    container_name: boundlexx-test-celery-1
+    container_name: test-celery-1
     env_file:
       - ./.env
       - ./.local.env
@@ -205,10 +205,10 @@ services:
       - postgres
       - redis
     networks:
-      - boundlexx-test-network
+      - test-app-network
 
   celerybeat:
-    container_name: boundlexx-test-celerybeat-1
+    container_name: test-celerybeat-1
     env_file:
       - ./.env
       - ./.local.env
@@ -216,10 +216,10 @@ services:
       - postgres
       - redis
     networks:
-      - boundlexx-test-network
+      - test-app-network
 
   huey-consumer:
-    container_name: boundlexx-test-huey-consumer-1
+    container_name: test-huey-consumer-1
     entrypoint: /usr/local/bin/start-huey-consumer
     env_file:
       - ./.env
@@ -240,29 +240,29 @@ services:
       - postgres
       - redis
     networks:
-      - boundlexx-test-network
+      - test-app-network
 
   postgres:
-    container_name: boundlexx-test-postgres-1
+    container_name: test-postgres-1
     volumes:
-      - boundlexx-test_postgres_data:/var/lib/postgresql/data
+      - test-postgres-data:/var/lib/postgresql/data
     env_file:
       - ./.env
       - ./.local.env
     networks:
-      - boundlexx-test-network
+      - test-app-network
 
   redis:
-    container_name: boundlexx-test-redis-1
+    container_name: test-redis-1
     networks:
-      - boundlexx-test-network
+      - test-app-network
 
 volumes:
-  boundlexx-test_postgres_data:
+  test-postgres-data:
 
 networks:
-  boundlexx-test-network:
-    name: boundlexx-test-network
+  test-app-network:
+    name: test-app-network
     driver: bridge
 """
 
@@ -277,7 +277,7 @@ def update_devcontainer_config(env_type, dry_run=False):
 
     try:
         # Read current devcontainer.json
-        with open(devcontainer_path, "r", encoding="utf-8") as f:
+        with open(devcontainer_path, encoding="utf-8") as f:
             content = f.read()
 
         # Determine new port based on environment
@@ -344,19 +344,28 @@ def setup_environment(env_type, dry_run=False, force=False):
 
     # Determine configuration
     if env_type == "dev":
-        prefix = "boundlexx"
+        env_name = "Development"
         port = 28000
+        container_suffix = ""
+        network_name = "app-network"
+        volume_name = "postgres-data"
         override_content = create_development_override()
     else:  # test
-        prefix = "boundlexx-test"
+        env_name = "Test"
         port = 28001
+        container_suffix = "test-"
+        network_name = "test-app-network"
+        volume_name = "test-postgres-data"
         override_content = create_test_override()
 
-    print(f"\n🛠️ Setting up {env_type} environment")
-    print(f"   Prefix: {prefix}")
+    project_name = Path.cwd().name  # folder name becomes Docker Compose project
+
+    print(f"\n🛠️ Setting up {env_name} environment")
+    print(f"   Project: {project_name}")
     print(f"   Django port: {port}")
-    print(f"   Network: {prefix}-network")
-    print(f"   Volumes: {prefix}_postgres_data")
+    print(f"   Network: {project_name}_{network_name}")
+    print(f"   Volumes: {project_name}_{volume_name}")
+    print(f"   Containers: {project_name}_{container_suffix}django-1, etc.")
 
     # Check for existing override file
     override_path = Path("docker-compose.override.yml")
@@ -391,9 +400,9 @@ def setup_environment(env_type, dry_run=False, force=False):
     # Update devcontainer.json for the selected environment
     update_devcontainer_config(env_type, dry_run)
 
-    print(f"\n🌐 Your {env_type} environment is ready!")
+    print(f"\n🌐 Your {env_name} environment is ready!")
     print(f"   Access Django at: http://localhost:{port}")
-    print(f"   Container prefix: {prefix}")
+    print(f"   Container naming: {project_name}_{container_suffix}[service]-1")
     print("\n💡 Next steps:")
     print("   1. Start containers: docker-compose up -d")
     print("   2. Check status: docker ps")

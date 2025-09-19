@@ -76,64 +76,68 @@ python manage.py create_game_objects --recipe
 - **KeyError during ingestion:** Ensure game data import completed successfully
 - **`Skill.DoesNotExist` error:** Skills must be imported before recipes
 - **Carriage return warnings:** Environment file has Windows line endings - run `sed -i 's/\r$//' .local.env`
-## Modernization & Migration Plan (2025)
+## Modernization & Migration Plan (2025) - FORWARD-LOOKING
+
+### CRITICAL: Migration-Aware Development Policy
+- **All code changes must consider forward migration compatibility** with the planned modernization stack
+- **Django 5.2 LTS + Python 3.12** is the target foundation (LTS support until April 2028)
+- **Modern stack targets**: TaskIQ (async tasks), Django Ninja (fast APIs), uv (dependency management), Ruff (linting)
+- **Container-first approach**: All development and testing must use Docker containers to avoid host environment conflicts
 
 ### Policy Clarification
 - The directory `docs/modernization/template_examples` is for research/reference only. No tracking or documentation of work for this build should occur there. All tracking must be in `MODERNIZATION_TRACKING.md` and related main docs.
 
-### Sequenced Steps
-1. **Preparation**
-  - Backup database, Redis, Docker images.
-  - Use feature branches and tag before/after each major step.
-  - Only run commands in the correct Docker/VS Code devcontainer environment.
-  - Use VS Code tasks for all management commands.
+### Current Status: Phase 3 - Django 5.2 LTS Core Upgrade
+**Phases 1 & 2 COMPLETED**: Python 3.12 infrastructure and database compatibility successfully implemented and committed (tag: post-database-upgrade)
 
-2. **Issue-by-Issue Plan**
-  - Update Github Actions: Review modern workflows, update, and validate. **COMPLETE ✅** (2025-09-16: Workflow simplified, uses GHCR, validated with tests/lint/build-push)
-  - Simplify/Update Project Structure: Refactor to match modern standards, test all commands.
-  - Replace DRF with Django Ninja: Prototype v2 API, maintain compatibility, or create v3 if needed.
-  - Replace Celery with TaskIQ: Migrate tasks incrementally, validate, keep Celery until proven.
-  - Update Requirements Management: Move to `pyproject.toml` and `uv`, keep old files until validated. **IN PROGRESS (Dependency/Upgrade Cluster)**
-  - Update Linters: Add Ruff and mypy, incrementally fix issues, then remove old linters.
-  - Raise Code Coverage: Add/expand tests to reach 85%+.
-  - Remove Huey: Convert tasks to Celery/TaskIQ, validate, then remove Huey.
-  - Move setup.cfg into pyproject.toml: Migrate configs, test, remove old config after validation.
-  - Rename Container Images: Update Dockerfiles/Compose, test builds and runs.
-  - Fix Steam Login: Update scripts for Steam login, test with 2FA/session tickets.
-  - Update to Django 4.2+: Upgrade incrementally, resolve deprecations, update dependencies, test after each step. **IN PROGRESS (Dependency/Upgrade Cluster)**
-  - Update to Python 3.10+: Update Dockerfiles, CI, and envs, test all services and dependencies. **IN PROGRESS (Dependency/Upgrade Cluster)**
-  - Ensure Containers Build in GHA: Update workflows to build/test containers on push. **COMPLETE ✅** (2025-09-16: Resolved Issue #21, builds/pushes to GHCR on master)
+### Migration Sequence (Forward-Looking)
+1. ✅ **Phase 1 & 2 COMPLETE**: Python 3.12 + Database Compatibility
+2. 🔄 **Phase 3 IN PROGRESS**: Django 5.2 LTS Core Upgrade - creates stable foundation for all subsequent modernizations
+3. 📋 **Phase 4**: uv + pyproject.toml migration (Issue #30) - leverages Django 5.2 async capabilities
+4. 📋 **Phase 5**: Ruff + mypy setup (Issue #29) - enhanced by Django 5.2 type support
+5. 📋 **Phase 6**: Remove Huey → Celery consolidation (Issue #27)
+6. 📋 **Phase 7**: TaskIQ parallel setup + gradual migration (Issue #31) - benefits from Django 5.2 async
+7. 📋 **Phase 8**: Django Ninja v3 API or v2 rebuild (Issue #32) - optimized for Django 5.2 performance
+8. 📋 **Phase 9**: Steam authentication fixes + Python 3.12 gevent compatibility
+9. 📋 **Phase 10**: Project structure modernization (Issue #33) using ark-operator patterns as reference
 
-3. **Research & Conflict Mitigation**
-  - Review official docs for Django, Python, TaskIQ, Django Ninja, Ruff, uv, Docker, and CI/CD.
-  - Upgrade incrementally, resolve deprecation warnings, check third-party compatibility.
-  - Validate all jobs in PRs before merging.
+### Repository Relationships:
+- **yatesjj/boundlexx** (your fork) → sophisticated container setup with port management
+- **AngellusMortis/boundlexx** (upstream) → minimal Docker setup, simple patterns
+- **AngellusMortis/ark-operator** (modernization reference) → modern tooling patterns for Issue #33
 
-4. **Rollback & Documentation**
-  - Tag before/after each major migration for rollback.
-  - Restore database/Redis from backup if migrations fail.
-  - Keep old configs/scripts until new ones are fully validated.
-  - Log all actions, rationale, and rollback steps in `MODERNIZATION_TRACKING.md`.
+### Forward Migration Compatibility Requirements
+**When making ANY code changes, verify compatibility with:**
+- ✅ **Django 5.2 LTS**: All model changes, admin customizations, URL patterns must be Django 5.2 compatible
+- ✅ **TaskIQ async**: Background tasks should be designed for eventual TaskIQ migration
+- ✅ **Django Ninja**: API endpoints should consider eventual DRF → Django Ninja migration
+- ✅ **uv dependency management**: Requirements changes must work with future pyproject.toml structure
+- ✅ **Ruff linting**: Code style should follow modern Python standards that Ruff enforces
 
-5. **Next Steps**
-  - Archive or remove `template_examples` to avoid confusion.
-  - Begin with environment backup and branch setup.
-  - Start with the first actionable issue (GHA update), documenting every step. **COMPLETE ✅**
-  - Current Focus: Dependency/Upgrade Cluster (Python 3.10+, Django 4.2+, Requirements to pyproject.toml/uv, Resolve Dependabot alerts). Findings: 134 vulnerabilities (10 critical); docs updated for GHCR; Dockerfile uses Python 3.9 (to be upgraded).
-
-**Pause before making any environment changes.**
+### Dependency Version Strategy
+- **Django**: `>=5.2,<5.3` (LTS until April 2028)
+- **Python**: `3.12` (modern standard, excellent performance)
+- **Celery**: `<6` (prepare for TaskIQ migration)
+- **psycopg2-binary**: For reliable container builds
+- **steam[client]**: Temporarily disabled (gevent Python 3.12 compatibility issue)
 
 ## Container Management - COMPLETE ✅
 
+### Container Naming Modernization:
+- **Issue #25 COMPLETE**: All container images now use kebab-case naming (boundlexx-django, boundlexx-postgres)
+- **docker-compose.yml**: Base orchestration with kebab-case images, no exposed ports (handled by override files)
+- **setup_containers.py**: Automated environment setup with sophisticated port conflict prevention
+
 ### Production-Ready Container Scripts:
-- `setup_development_container_improved.py` - Main development environments (Django port 28000)
-- `setup_test_container.py` - Test environments (Django port 28001, others internal)
+- `setup_containers.py` - **Primary setup script** with automated port allocation (dev: 28000, test: 28001)
 - `container_status.py` - Status monitoring utility
+- **Repository Pattern Analysis**: Your fork uses sophisticated port management vs upstream's minimal Docker setup
+- **Value Proposition**: Prevents port conflicts across multiple environments - essential for complex development workflows
 
 ### Container Setup:
 1. **Copy template files:** `cp .env .local.env` and `cp docker-compose.override.example.yml docker-compose.override.yml`
-2. **Development:** `python setup_development_container_improved.py` (creates folder-prefixed containers)
-3. **Test environments:** `python setup_test_container.py` (port offsets for parallel testing)
+2. **Development:** `python setup_containers.py` (creates folder-prefixed containers on port 28000)
+3. **Test environments:** `python setup_containers.py --test` (port 28001 with offset allocation)
 4. **All scripts support `--dry-run`** for safe preview before applying changes
 
 ### Automatic Folder-Based Naming
@@ -155,6 +159,21 @@ The project supports multiple testing strategies for different use cases:
 
 1. **Physical Environment Isolation:**
    - Separate clone directories (e.g., `boundlexx-yatesjj-test`)
+   - Container isolation with folder-based naming
+   - Port isolation (dev: 28000, test: 28001)
+   - Complete environment separation for full integration testing
+
+2. **Database-Level Isolation (.test.env):**
+   - Uses `test_boundlexx` database instead of `boundlexx`
+   - Same containers and infrastructure as development
+   - Ideal for unit tests, CI/CD, and rapid database testing
+   - Complements rather than conflicts with physical isolation
+
+3. **Usage Guidelines:**
+   - **Quick database testing:** Use `.test.env` for rapid database-focused testing
+   - **Full environment testing:** Use separate clone setup for complete isolation
+   - **Automated testing/CI:** Use `.test.env` for pipelines where full container isolation isn't needed
+   - **Data experimentation:** Use `.test.env` for testing schema changes or ingestion logic
    - Container isolation with folder-based naming
    - Port isolation (dev: 28000, test: 28001)
    - Complete environment separation for full integration testing
@@ -218,13 +237,30 @@ Boundlexx is a Django monorepo for Boundless game data, supporting both containe
   - Huey: `docker-compose up huey-consumer huey-scheduler`
 
 
-## Project-Specific Conventions
+## Project-Specific Conventions & Forward Migration Policy
 - All modernization and troubleshooting steps must be logged in `docs/modernization/` with rationale and rollback.
 - The `docs/modernization/template_examples/` directory is for research/reference only and must NOT be used to track or document any work in this build. All tracking and documentation must be done in the main modernization files (e.g., `MODERNIZATION_TRACKING.md`).
 - Use `pip-compile` to update requirements; never edit `dev.txt` or `production.txt` directly.
 - Dockerfiles may use Debian archive workarounds (see modernization log).
 - Exclude migrations, static cache, and some utility files from linting/formatting (see config files).
 - Use feature branches and reference modernization logs in PRs (see `docs/modernization/GIT_WORKFLOW.md`).
+
+### Forward Migration Requirements (CRITICAL)
+**All code changes must verify compatibility with target modernization stack:**
+- **Django 5.2 LTS compatibility**: Model changes, admin customizations, URL patterns, middleware
+- **TaskIQ readiness**: Background tasks designed for async migration from Celery
+- **Django Ninja preparation**: API endpoints ready for DRF → Django Ninja transition
+- **uv dependency management**: Requirements structured for pyproject.toml migration
+- **Ruff + mypy standards**: Code follows modern Python linting/typing practices
+- **Container-first development**: All testing in Docker to prevent environment conflicts
+
+### Migration Impact Assessment Required
+Before implementing any feature, assess impact on:
+1. **Issue #31 (TaskIQ)**: Will this task need async migration?
+2. **Issue #32 (Django Ninja)**: Does this API endpoint need DRF → Ninja compatibility?
+3. **Issue #30 (uv/pyproject.toml)**: Are dependency changes compatible with modern structure?
+4. **Issue #29 (Ruff/mypy)**: Does code follow modern linting standards?
+5. **Issue #27 (Remove Huey)**: Will this conflict with Huey → Celery consolidation?
 
 ## Git Workflow for Modernization
 - **Remotes:**

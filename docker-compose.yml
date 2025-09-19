@@ -8,10 +8,10 @@ services:
       dockerfile: ./docker/django/Dockerfile
       target: dev
       cache_from:
-        - ghcr.io/angellusmortis/boundlexx_django
-        - ghcr.io/angellusmortis/boundlexx_dev_django
-        - boundlexx_dev_django
-    image: boundlexx_dev_django
+        - ghcr.io/angellusmortis/boundlexx-django
+        - ghcr.io/angellusmortis/boundlexx-django-dev
+        - boundlexx-django-dev
+    image: boundlexx-django-dev
     depends_on:
       - postgres
       - redis
@@ -50,9 +50,9 @@ services:
       context: .
       dockerfile: ./docker/postgres/Dockerfile
       cache_from:
-        - ghcr.io/angellusmortis/boundlexx_postgres
-        - boundlexx_postgres
-    image: boundlexx_postgres
+        - ghcr.io/angellusmortis/boundlexx-postgres
+        - boundlexx-postgres
+    image: boundlexx-postgres
     shm_size: 1g
     volumes:
       - local_postgres_data:/var/lib/postgresql/data

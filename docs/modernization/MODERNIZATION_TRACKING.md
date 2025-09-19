@@ -2,6 +2,53 @@
 
 This document tracks all technical changes, findings, and decisions made during the Boundlexx migration and modernization effort. Each entry includes the date, description, rationale, affected files, and rollback instructions. This log is intended to be detailed and technical to help others reproduce or understand the process.
 
+## CURRENT STATUS: Phase 3 - Django 5.2 LTS Core Upgrade (IN PROGRESS)
+**Phases 1 & 2 COMPLETED**: Python 3.12 infrastructure and database compatibility successfully implemented and committed (tag: post-database-upgrade)
+**Issue #25 COMPLETED**: Container naming modernization to kebab-case completed
+
+---
+
+## 2025-01-27: Issue #25 - Container Naming Modernization COMPLETED
+
+### Container Naming Scheme Modernization
+- **Description:** Completed comprehensive update to kebab-case naming scheme for all Docker containers and related infrastructure per Issue #25.
+- **Rationale:** Provides consistent naming convention across all environments and improves readability. Addresses GitHub Issue #25 requirements.
+- **Files Changed:**
+  - `docker-compose.yml` (image names and cache_from references)
+  - `docker-compose.override.yml` (volume names: `boundlexx_postgres_data` → `boundlexx-postgres-data`)
+  - `.github/workflows/ci.yml` (all container references in CI/CD pipeline)
+- **Updated Naming Convention:**
+  - **Images:** `boundlexx_django` → `boundlexx-django`, `boundlexx_dev_django` → `boundlexx-django-dev`, `boundlexx_postgres` → `boundlexx-postgres`
+  - **Volumes:** `boundlexx_postgres_data` → `boundlexx-postgres-data`
+  - **Containers:** Maintained existing kebab-case (e.g., `boundlexx-django-1`, `boundlexx-postgres-1`)
+- **Impact:** Requires PostgreSQL volume recreation due to volume name change - perfect timing with PostgreSQL 12→15 upgrade
+- **Forward Migration Compatibility:** ✅ Prepared for all subsequent phases with consistent naming
+- **How to Roll Back:**
+  - Revert `docker-compose.yml`: Change all `boundlexx-*` image names back to `boundlexx_*`
+  - Revert `docker-compose.override.yml`: Change volume name back to `boundlexx_postgres_data`
+  - Revert `.github/workflows/ci.yml`: Change all container references back to underscore format
+
+---
+
+## 2025-01-27: Phase 3A - Django 5.2 LTS Requirements Update COMPLETED
+
+### Policy Update: Forward Migration Compatibility Requirements
+- **Description:** Updated all documentation to enforce forward-migration compatibility with the complete modernization stack. All code changes must now consider compatibility with Django 5.2 LTS, TaskIQ, Django Ninja, uv, and Ruff.
+- **Rationale:** Prevents technical debt and ensures smooth transitions during each modernization phase. Addresses issues #23, #27, #29, #30, #31, #32, #33.
+- **Files Changed:**
+  - `.github/copilot-instructions.md`
+  - `docs/modernization/MODERNIZATION_TRACKING.md`
+  - `requirements/in/base.in` (Django 5.2 LTS constraint)
+- **Forward Migration Impact Assessment:**
+  - ✅ **Issue #31 (TaskIQ)**: Background task design considers async migration
+  - ✅ **Issue #32 (Django Ninja)**: API endpoints designed for DRF → Ninja transition
+  - ✅ **Issue #30 (uv/pyproject.toml)**: Requirements structured for modern dependency management
+  - ✅ **Issue #29 (Ruff/mypy)**: Code follows modern linting standards
+  - ✅ **Issue #27 (Remove Huey)**: Task consolidation strategy confirmed
+- **How to Roll Back:**
+  - Revert to previous copilot-instructions.md version
+  - Change Django constraint back to `>=4.0,<4.1` in requirements/in/base.in
+
 ---
 
 ## 2025-09-08: Project Initialization

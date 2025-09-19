@@ -597,9 +597,9 @@ class WorldNotification(NotificationBase):
         for variant in variants:
             if variant.lookup_id not in extra_context["item_images"]:
                 if use_forum_links:
-                    extra_context["item_images"][
-                        variant.lookup_id
-                    ] = self._upload_item_image(variant)
+                    extra_context["item_images"][variant.lookup_id] = (
+                        self._upload_item_image(variant)
+                    )
                 else:
                     extra_context["item_images"][variant.lookup_id] = variant.image.url
                 extra_context["cdn_item_images"][variant.lookup_id] = variant.image.url
@@ -645,9 +645,9 @@ class WorldNotification(NotificationBase):
         main_embed["title"] = world.display_name
 
         if is_update:
-            main_embed[
-                "description"
-            ] = f"New information is avaiable for this {self._world_type}!"
+            main_embed["description"] = (
+                f"New information is avaiable for this {self._world_type}!"
+            )
         else:
             main_embed["description"] = f"A new {self._world_type} has appeared!"
 

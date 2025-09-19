@@ -73,7 +73,7 @@ def _missing():
     click.echo("Fixing abandoned images...")
     not_found = []
     multiple = []
-    for (dirpath, _, filenames) in os.walk(settings.BOUNDLESS_WORLDS_LOCATIONS):
+    for dirpath, _, filenames in os.walk(settings.BOUNDLESS_WORLDS_LOCATIONS):
         with click.progressbar(filenames, show_percent=True, show_pos=True) as pbar:
             for filename in pbar:
                 world_name = filename.split(".")[0]

@@ -1,6 +1,7 @@
 """
 Base settings to build other settings files upon.
 """
+
 from datetime import timedelta
 from pathlib import Path
 
@@ -88,8 +89,19 @@ AZURE_CLIENT_SECRET = env("AZURE_CLIENT_SECRET", default=None)
 AZURE_TENANT_ID = env("AZURE_TENANT_ID", default=None)
 AZURE_SUBSCRIPTION_ID = env("AZURE_SUBSCRIPTION_ID", default=None)
 
-if AZURE_ACCOUNT_NAME and AZURE_ACCOUNT_KEY and AZURE_CONTAINER:
-    DEFAULT_FILE_STORAGE = "storages.backends.azure_storage.AzureStorage"
+# Django 5.2 LTS: Use new STORAGES setting instead of deprecated DEFAULT_FILE_STORAGE
+STORAGES = {
+    "default": {
+        "BACKEND": (
+            "storages.backends.azure_storage.AzureStorage"
+            if (AZURE_ACCOUNT_NAME and AZURE_ACCOUNT_KEY and AZURE_CONTAINER)
+            else "django.core.files.storage.FileSystemStorage"
+        ),
+    },
+    "staticfiles": {
+        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+    },
+}
 
 # URLS
 # ------------------------------------------------------------------------------
