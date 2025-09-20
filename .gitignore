@@ -9,6 +9,10 @@ docker-compose.override.yml
 .steam/*
 !.steam/.gitkeep
 
+# Test environments (parallel testing directories)
+*-test/
+../boundlexx-yatesjj-test/
+
 ### Python template
 # Byte-compiled / optimized / DLL files
 __pycache__/
