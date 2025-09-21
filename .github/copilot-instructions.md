@@ -1,5 +1,24 @@
 # Copilot Instructions for Boundlexx Modernization
 
+## 📚 Documentation Structure - Industry Standard
+
+**Primary Reference: [Master Manual](../docs/manual/index.md)**
+
+The Master Manual is the **single source of truth** for all Boundlexx documentation, following industry standards:
+- **Setup & Environment**: [Getting Started](../docs/manual/getting-started/)
+- **Daily Development**: [Development Workflows](../docs/manual/workflows/development.md)
+- **System Architecture**: [Architecture Guide](../docs/manual/architecture/)
+- **Migration & Upgrades**: [Migration Roadmap](../docs/manual/migration/roadmap.md)
+- **Complete Reference**: [Configuration, Commands, API, Troubleshooting](../docs/manual/reference/)
+
+**Modernization Documentation**: [Clean Active Directory](../docs/modernization/)
+- **Active Tracking**: [MODERNIZATION_TRACKING.md](../docs/modernization/MODERNIZATION_TRACKING.md)
+- **Production Steam Auth**: [STEAM_AUTHENTICATION.md](../docs/modernization/STEAM_AUTHENTICATION.md)
+- **Forward Guidance**: [FORWARD_MIGRATION_GUIDE.md](../docs/modernization/FORWARD_MIGRATION_GUIDE.md)
+- **Historical Context**: [Archived Plans & Research](../docs/modernization/archived_plans/)
+
+**This file provides condensed, AI-specific instructions. For human-readable documentation, always refer to the Master Manual.**
+
 ## Game Data Ingestion Workflow (IMPORTANT)
 
 ### ✅ Automated VS Code Tasks (Recommended)
@@ -210,13 +229,25 @@ def _get_steam_session_ticket(self, username, password):
 - **Modern stack targets**: TaskIQ (async tasks), Django Ninja (fast APIs), uv (dependency management), Ruff (linting)
 - **Container-first approach**: All development and testing must use Docker containers to avoid host environment conflicts
 
-### Policy Clarification
-- The directory `docs/modernization/template_examples` is for research/reference only. No tracking or documentation of work for this build should occur there. All tracking must be in `MODERNIZATION_TRACKING.md` and related main docs.
+### Policy Clarification - Documentation Standards
+**Master Manual**: Primary documentation source with industry-standard structure following Django/FastAPI patterns
+**Modernization Directory**: Clean active documentation + organized archives with proper historical context
+**Documentation Hierarchy**: Master Manual > Active Modernization Docs > Archived Plans/Research > Legacy Archive
+**No Scattered Docs**: All documentation must follow the established hierarchy - no standalone documentation outside the system
 
 ### Current Status: Phase 3 - Django 5.2 LTS Core Upgrade & Container Modernization COMPLETED
-**Phases 1 & 2 COMPLETED**: Python 3.12 infrastructure and database compatibility successfully implemented and committed (tag: post-database-upgrade)
-**Container Modernization COMPLETED**: Clean single-prefix naming strategy with environment-specific prefixes and explicit container names implemented
-**Dependency Optimization COMPLETED**: django-filter downgraded from 25.1 to 24.3 for DRF OpenAPI compatibility (LTS strategy until Django Ninja migration)
+**Phases 1 & 2 COMPLETED**: Python 3.12 infrastructure and database compatibility successfully implemented
+**Container Modernization COMPLETED**: Clean single-prefix naming strategy with environment-specific prefixes implemented
+**Dependency Optimization COMPLETED**: django-filter downgraded from 25.1 to 24.3 for DRF OpenAPI compatibility
+**Documentation Standardization COMPLETED**: Industry-standard Master Manual implemented, modernization directory cleaned and organized
+
+### Documentation Cleanup & Standards (September 2025)
+**Modernization Directory Reorganized**:
+- **Active Documents**: 4 current files (tracking, Steam auth, forward guidance, directory guide)
+- **Archived Plans**: Django 5.1 upgrade plans moved to archive (project exceeded goals - achieved 5.2.6 LTS)
+- **Archived Research**: Container and environment research preserved with implementation context
+- **Removed Obsolete**: 6+ administrative and development utility files cleaned up
+- **Industry Structure**: Professional documentation hierarchy with proper READMEs and navigation
 
 ### Migration Sequence (Forward-Looking)
 1. ✅ **Phase 1 & 2 COMPLETE**: Python 3.12 + Database Compatibility
@@ -285,7 +316,10 @@ This approach provides complete environment isolation, eliminates redundant doub
 - **Project tracking:** `docs/modernization/MODERNIZATION_TRACKING.md` (all changes logged)
 
 ### Testing Workflow:
-**For detailed testing workflows, see:** `docs/modernization/ENVIRONMENT_SETUP.md`
+**For detailed testing workflows, see:** [Master Manual Development Guide](../docs/manual/workflows/development.md)
+
+**Environment Setup**: [Master Manual Installation](../docs/manual/getting-started/installation.md)
+**Troubleshooting**: [Master Manual Troubleshooting](../docs/manual/reference/troubleshooting.md)
 
 ### Multiple Testing Approaches:
 The project supports multiple testing strategies for different use cases:
@@ -357,11 +391,11 @@ Boundlexx is a Django monorepo for Boundless game data, supporting both containe
 
 ## Project-Specific Conventions & Forward Migration Policy
 - All modernization and troubleshooting steps must be logged in `docs/modernization/` with rationale and rollback.
-- The `docs/modernization/template_examples/` directory is for research/reference only and must NOT be used to track or document any work in this build. All tracking and documentation must be done in the main modernization files (e.g., `MODERNIZATION_TRACKING.md`).
+- **The modernization directory is now clean and organized**: Active docs (4 files) + properly archived plans/research with READMEs
 - Use `pip-compile` to update requirements; never edit `dev.txt` or `production.txt` directly.
 - Dockerfiles may use Debian archive workarounds (see modernization log).
 - Exclude migrations, static cache, and some utility files from linting/formatting (see config files).
-- Use feature branches and reference modernization logs in PRs (see `docs/modernization/GIT_WORKFLOW.md`).
+- Use feature branches and reference modernization logs in PRs.
 
 ### Forward Migration Requirements (CRITICAL)
 **All code changes must verify compatibility with target modernization stack:**
@@ -427,7 +461,23 @@ Before implementing any feature, assess impact on:
 - Ingest game data: Use VS Code Tasks or management commands
 
 ---
-For all modernization/migration documentation, see `docs/modernization/`. For local venv setup, see `SETUP_LOCAL_VENV.md`. For git workflow, see `docs/modernization/GIT_WORKFLOW.md`.
+📚 **For comprehensive documentation, see the [Master Manual](../docs/manual/index.md)**
+
+The Master Manual contains:
+- Complete setup instructions
+- All workflows and procedures
+- Architecture documentation
+- Migration guides
+- Configuration reference
+- Troubleshooting guides
+
+**Legacy documentation in `docs/modernization/` is for historical reference only.**
 
 ---
-**Note:** If you are recreating the workspace, double-check the directory structure before running setup or migration commands. The correct structure is essential for Django imports, Docker builds, and all developer workflows.
+**Note:** When recreating workspaces, ensure proper directory structure before running setup commands. The Master Manual provides complete guidance for all development workflows.
+- Troubleshooting guides
+
+**Legacy documentation in `docs/modernization/` is for historical reference only.**
+
+---
+**Note:** When recreating workspaces, ensure proper directory structure before running setup commands. The Master Manual provides complete guidance for all development workflows.

@@ -1,16 +1,8 @@
 Boundlexx
 =========
 
-.. image:: https://img.shields.io/badge/built%20with-Cookiecutter%20Django-ff6**Verification:**
-
-Verify your containers are properly named:
-
-.. code-block:: bash
-
-   docker ps --format "table {{.Names}}\t{{.Image}}\t{{.Ports}}"
-
-Expected output for dev: `boundlexx-django-dev`, `boundlexx-postgres-dev`, etc.
-Expected output for test: `boundlexx-django-test`, `boundlexx-postgres-test`, etc.    :target: https://github.com/pydanny/cookiecutter-django/
+.. image:: https://img.shields.io/badge/built%20with-Cookiecutter%20Django-ff69b4.svg
+     :target: https://github.com/pydanny/cookiecutter-django/
      :alt: Built with Cookiecutter Django
 .. image:: https://img.shields.io/badge/code%20style-ruff-000000.svg
      :target: https://github.com/astral-sh/ruff
@@ -19,34 +11,51 @@ Expected output for test: `boundlexx-django-test`, `boundlexx-postgres-test`, et
      :target: https://mypy-lang.org/
      :alt: mypy type checker
 
-
 :License: MIT
 
-`Changelog <CHANGELOG.rst>`_
-----------------------------
+📚 **Complete Documentation: See the** `Master Manual <docs/manual/index.md>`_
+
+Quick Start (5 Minutes)
+------------------------
+
+1. **Clone and setup**:
+
+   .. code-block:: bash
+
+      git clone https://github.com/yatesjj/boundlexx.git
+      cd boundlexx
+      cp .env .local.env
+      cp docker-compose.override.example.yml docker-compose.override.yml
+
+2. **Container setup**:
+
+   .. code-block:: bash
+
+      python setup_containers.py --env dev
+      docker-compose up -d
+
+3. **Database setup**:
+
+   .. code-block:: bash
+
+      docker-compose run --rm manage python manage.py migrate
+
+4. **Ingest game data** (use VS Code Task: "Boundlexx: Fast Complete Setup")
+
+5. **Access APIs**: http://127.0.0.1:28001/api/v1/
+
+📖 **For complete setup, troubleshooting, and all workflows, see the** `Master Manual <docs/manual/index.md>`_
 
 Requirements
 ------------
 
-This project is configured to work with Docker inside of VS Code using the
-Remote Containers extension. It is recommend to use those. So make sure you have:
-
-* `Docker Engine and Compose`_. Requires at least
-* Docker Buildkit enabled (add `export DOCKER_BUILDKIT=1` to your shell rc or set it manually before running commands)
-* `VS Code`_ with the `Remote Containers extension`_.
-* MacOSX version of Boundless installed somewhere. You can use `steamcmd`_ to install it via the following command:
-
-   .. code-block:: bash
-
-      steamcmd +@sSteamCmdForcePlatformType macos +login username +force_install_dir /path/to/install +app_update 324510 -beta testing validate +quit
-
-* `Boundless Icon Renderer`_ set up and ran if you want to import item images into Boundlexx
+* `Docker Engine and Compose`_
+* `VS Code`_ with the `Remote Containers extension`_
+* Docker Buildkit enabled (add `export DOCKER_BUILDKIT=1` to your shell rc)
 
 .. _Docker Engine and Compose: https://docs.docker.com/get-docker/
 .. _VS Code: https://code.visualstudio.com/
 .. _Remote Containers extension: https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers
-.. _steamcmd: https://developer.valvesoftware.com/wiki/SteamCMD
-.. _Boundless Icon Renderer: https://forum.playboundless.com/t/icon-renderer/55879
 
 Setup
 -----
