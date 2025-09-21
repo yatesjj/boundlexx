@@ -191,7 +191,7 @@ Celery Background Tasks → BoundlessClient → Steam Authentication → Boundle
 **1. Scheduled Background Tasks**
 Celery automatically runs these tasks for world discovery and data updates:
 - `discover_worlds` - Scans for new world IDs
-- `poll_perm_worlds` - Updates permanent world data  
+- `poll_perm_worlds` - Updates permanent world data
 - `poll_exo_worlds` - Updates exoworld data
 - `poll_sovereign_worlds` - Updates player-owned worlds
 - `poll_creative_worlds` - Updates creative worlds
@@ -242,7 +242,7 @@ poll_data = client.get_world_poll(world, poll_token)
 ```bash
 BOUNDLESS_DS_REQUIRES_AUTH=True
 STEAM_USERNAMES=steam_user1,steam_user2,steam_user3
-STEAM_PASSWORDS=steam_pass1,steam_pass2,steam_pass3  
+STEAM_PASSWORDS=steam_pass1,steam_pass2,steam_pass3
 BOUNDLESS_USERNAMES=boundless_user1,boundless_user2,boundless_user3
 BOUNDLESS_PASSWORDS=boundless_pass1,boundless_pass2,boundless_pass3
 ```
@@ -270,7 +270,7 @@ python manage.py prompt_steam_guard
 
 **Monitoring & Logging:**
 - All authentication attempts logged with success/failure status
-- Steam Guard prompts logged when sentry files need refresh  
+- Steam Guard prompts logged when sentry files need refresh
 - Query token cache hits/misses tracked for performance monitoring
 
 ### **Why This Architecture Works**
@@ -291,6 +291,72 @@ python manage.py prompt_steam_guard
 - Task retry mechanisms handle temporary Steam/Discovery server issues
 
 **The key insight:** Steam authentication is **completely transparent** to the application. The world discovery system, shop data polling, and all Boundless API interactions work seamlessly because our Steam authentication provides the required session tickets automatically in the background.
+
+## 🕐 Steam Authentication Token Validity Periods
+
+### **Token Expiration Timeline**
+
+**1. Boundless Query Token (Application Level)**
+- **Duration**: **12 hours (43200 seconds)**
+- **Scope**: Boundless Discovery Server authentication
+- **Cache**: Django cache with explicit timeout
+- **Automatic Renewal**: Yes - regenerated when expired
+- **Location**: `boundlexx/boundless/game/client.py` line 212
+
+```python
+# Query token cached for 12 hours
+cache.set(cache_key, query_token, timeout=43200)
+```
+
+**2. Steam Session Tickets (Steam Level)**
+- **Duration**: **Single use only** - must be regenerated for each authentication
+- **Source**: Steam Official Documentation
+- **Important Notes**:
+  - Session tickets must only be used once
+  - `get_app_ticket()` must be called for every authentication request
+  - No persistent caching - always fresh generation required
+
+**3. Steam Sentry Files (2FA Bypass)**
+- **Duration**: **Indefinite** (until Steam invalidates them)
+- **Location**: `.steam/` directory (persistent storage)
+- **Purpose**: Bypass Steam Guard 2FA prompts for automated authentication
+- **Renewal**: **Manual intervention required** when Steam invalidates them
+- **Signs of Expiration**:
+  - Steam authentication falls back to interactive 2FA prompts
+  - `cli_login()` gets triggered instead of silent `login()`
+
+**4. Encrypted Application Tickets (Alternative Method)**
+- **Duration**: **21 days after issue**
+- **Source**: Steam Official Documentation
+- **Note**: We're not using this method - using session tickets instead
+
+### **Practical Operation Timeline**
+
+**Normal Operation (No Manual Intervention):**
+```
+0-12 hours: Query token valid → All API calls work seamlessly
+12+ hours: Query token expires → New Steam authentication triggered
+   ↓
+Steam sentry files valid → Silent reauthentication → New 12-hour query token
+```
+
+**When Manual Intervention Required:**
+```
+Steam invalidates sentry files → Steam authentication fails → Interactive 2FA required
+   ↓
+Run: python manage.py prompt_steam_guard
+   ↓
+New sentry files created → Automatic operation restored
+```
+
+### **Key Operational Insights**
+
+1. **Query Token**: Short-lived (12 hours) but automatically renewed
+2. **Steam Session Tickets**: Single-use, always fresh generation
+3. **Sentry Files**: Long-lived but unpredictable expiration
+4. **Manual Intervention**: Only needed when Steam invalidates sentry files (rare)
+
+**Summary**: The tokens expire every **12 hours**, but 2FA renewal is only required when Steam invalidates the sentry files (unpredictable, typically weeks/months).
 
 ### Key Lessons Learned:
 1. **Library Investigation Required**: Don't assume method names, investigate actual API

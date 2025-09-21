@@ -9,8 +9,8 @@ Verify your containers are properly named:
 
    docker ps --format "table {{.Names}}\t{{.Image}}\t{{.Ports}}"
 
-Expected output for dev: `boundlexx-django-1`, `boundlexx-postgres-1`, etc.
-Expected output for test: `boundlexx-test-django-1`, `boundlexx-test-postgres-1`, etc.    :target: https://github.com/pydanny/cookiecutter-django/
+Expected output for dev: `boundlexx-django-dev`, `boundlexx-postgres-dev`, etc.
+Expected output for test: `boundlexx-django-test`, `boundlexx-postgres-test`, etc.    :target: https://github.com/pydanny/cookiecutter-django/
      :alt: Built with Cookiecutter Django
 .. image:: https://img.shields.io/badge/code%20style-ruff-000000.svg
      :target: https://github.com/astral-sh/ruff
@@ -53,14 +53,14 @@ Setup
 
 **Modernization Note:**
 
-This fork is undergoing modernization, including a switch to GitHub Container Registry (GHCR) for all image pushes. Dependency upgrades (Python 3.10+, Django 4.2+) are in progress on feature/dependency-upgrade branch to resolve 134 Dependabot vulnerabilities.
+This fork has completed Phase 3 of modernization, including container naming modernization and clean environment-specific prefixes. The dependency upgrade (Python 3.12, Django 5.2 LTS) is complete on the feature/dependency-upgrade branch. All container management now uses a unified setup script with support for development, test, and production environments.
 
 **Project Structure:**
 
 - Main app: ``boundlexx/`` (flat, no nesting)
 - Configs: Centralized in ``pyproject.toml`` (in progress)
 - Scripts: Management tools in root (e.g., setup_containers.py)
-- **Unified container setup:** All environment configuration is now handled by the single ``setup_containers.py`` script with simplified naming (boundlexx vs boundlexx-test).
+- **Unified container setup:** All environment configuration is now handled by the single ``setup_containers.py`` script with clean container naming following Issue #25 standard (boundlexx-django, boundlexx-django-dev, boundlexx-django-test).
 
 
 **Quick Start for Development:**
@@ -69,8 +69,8 @@ This fork is undergoing modernization, including a switch to GitHub Container Re
 
    .. code-block:: bash
 
-      # Example: C:\VSCode\boundlexx-yatesjj\boundlexx\
-   # The current folder name (boundlexx-yatesjj) will be used for container prefixes
+      # Example: C:\VSCode\boundlexx-yatesjj\dev-boundlexx\
+      # Container names will follow the boundlexx-service-environment pattern
 
 2. **Create local environment files:**
 
@@ -84,11 +84,14 @@ This fork is undergoing modernization, including a switch to GitHub Container Re
 
    .. code-block:: bash
 
-      # For development environment (Django on port 28000)
+      # For development environment (Django on port 28001)
       python setup_containers.py --env dev
 
-      # For test environment (Django on port 28001)
+      # For test environment (Django on port 28002)
       python setup_containers.py --env test
+
+      # For production environment (Django on port 28000)
+      python setup_containers.py --env production
 
       # Interactive mode (prompts for environment choice)
       python setup_containers.py
@@ -113,7 +116,7 @@ Verify your containers are properly named:
 
    docker ps --format "table {{.Names}}\t{{.Image}}\t{{.Ports}}"
 
-Expected output: `boundlexx-yatesjj-django-1`, `boundlexx-yatesjj-postgres-1`, etc.
+Expected output: `boundlexx-django-dev`, `boundlexx-postgres-dev`, etc.
 
 **Next Steps: Manual/Task-Based Setup**
 
@@ -168,9 +171,27 @@ If you encounter a KeyError or missing data error during this step (e.g., `Skill
 
    .. code-block:: bash
 
-      python manage.py runserver 0.0.0.0:28000
+      python manage.py runserver 0.0.0.0:28001
 
-After these steps, your Boundlexx instance should be ready for use and development. To log in as an admin, visit http://127.0.0.1:28000/admin/ and use the credentials you created.
+After these steps, your Boundlexx instance should be ready for use and development. To log in as an admin, visit http://127.0.0.1:28001/admin/ and use the credentials you created.
+
+Troubleshooting & Recent Fixes
+-------------------------------
+
+**Command Parameter Updates:**
+
+As of September 2025, the color group processing parameter has been updated to avoid conflicts with Django's built-in colorization options:
+
+- **Use** ``--colors`` for color group processing: ``python manage.py create_game_objects --colors``
+- **Django's built-in** ``--color/--no-color`` remains available for output colorization
+
+This change eliminates Click framework warnings about duplicate parameters and provides clearer intent.
+
+**Common Issues:**
+
+- **KeyError during ingestion:** Ensure game data import completed successfully before running create_game_objects
+- **"Skill.DoesNotExist" error:** Skills must be imported before recipes (dependency order is critical)
+- **Django 5.2.6 LTS Compatibility:** All modernization infrastructure is verified working with Django 5.2 LTS and Python 3.12
 
 Container Management Scripts
 ----------------------------
@@ -181,34 +202,35 @@ The project includes a unified script for managing Docker container environments
 
 .. code-block:: bash
 
-   # Interactive mode - prompts you to choose dev or test
+   # Interactive mode - prompts you to choose dev, test, or production
    python setup_containers.py
 
-   # Development environment (boundlexx-*, Django on port 28000)
+   # Development environment (boundlexx-*-dev, Django on port 28001)
    python setup_containers.py --env dev
 
-   # Test environment (boundlexx-test-*, Django on port 28001)
+   # Test environment (boundlexx-*-test, Django on port 28002)
    python setup_containers.py --env test
+
+   # Production environment (boundlexx-*, Django on port 28000)
+   python setup_containers.py --env production
 
    # Preview without writing files
    python setup_containers.py --env dev --dry-run
 
 **Key Features:**
 
-* **Simple naming:** Development uses `boundlexx` prefix, test uses `boundlexx-test`
-* **Fixed ports:** 28000 for dev, 28001 for test (no complex offset calculations)
+* **Clean naming:** Development uses `boundlexx-*-dev` containers, test uses `boundlexx-*-test`, production uses `boundlexx-*`
+* **Fixed ports:** 28001 for dev, 28002 for test, 28000 for production
 * **Complete isolation:** Each environment gets its own containers, networks, and volumes
-* **Auto-setup:** Copies `.env` to `.local.env` if missing
-* **Safe defaults:** Won't overwrite existing files without confirmation
+* **Auto-setup:** Copies `.env` to `.local.env` if missing (with overwrite prompts)
+* **Safe defaults:** Prompts before overwriting existing files, use `--force` to skip prompts
 
 **Container Status:**
 
-.. code-block:: bash
+For monitoring and troubleshooting, see the comprehensive documentation:
+`docs/modernization/ENVIRONMENT_SETUP.md`
 
-   # Check container status
-   python container_status.py
-
-**Note:** The unified setup script (`setup_containers.py`) only generates or updates configuration files. **It does NOT start containers automatically, nor does it print instructions to start them.** The script uses the current folder name for container and network prefixes. You are responsible for starting containers manually (e.g., with `docker-compose up -d`) after reviewing and customizing your configuration files.
+**Note:** The unified setup script (`setup_containers.py`) only generates or updates configuration files. **It does NOT start containers automatically.** The script uses the current folder name for container and network prefixes. You are responsible for starting containers manually (e.g., with `docker-compose up -d`) after reviewing and customizing your configuration files.
 
 **For detailed setup instructions, troubleshooting, and advanced workflows, see:**
 `docs/modernization/ENVIRONMENT_SETUP.md`

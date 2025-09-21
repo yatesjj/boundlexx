@@ -33,6 +33,37 @@ class PurePythonSteamAuth:
 
         # Ensure sentry directory exists for credential storage
         os.makedirs(self.sentry_dir, exist_ok=True)
+        logger.info(f"Steam sentry directory: {self.sentry_dir}")
+
+    def check_sentry_status(self, username: str) -> bool:
+        """Check if sentry file exists for username."""
+        if not self.client:
+            return False
+
+        sentry_data = self.client.get_sentry(username)
+        has_sentry = sentry_data is not None
+        logger.info(f"Sentry file status for {username}: {'Found' if has_sentry else 'Not found'}")
+
+        # Also check filesystem directly
+        sentry_file = os.path.join(self.sentry_dir, f"{username}.sentry")
+        file_exists = os.path.exists(sentry_file)
+        logger.info(f"Sentry file on disk: {'Found' if file_exists else 'Not found'} at {sentry_file}")
+
+        return has_sentry
+
+    def wait_for_sentry_creation(self, username: str, timeout: int = 10) -> bool:
+        """Wait for sentry file to be created after successful authentication."""
+        import time
+        start_time = time.time()
+
+        while time.time() - start_time < timeout:
+            if self.check_sentry_status(username):
+                logger.info(f"Sentry file created for {username} after {time.time() - start_time:.1f}s")
+                return True
+            time.sleep(0.5)
+
+        logger.warning(f"Sentry file not created for {username} after {timeout}s timeout")
+        return False
 
     def authenticate_with_2fa(self, username: str, password: str) -> Optional[str]:
         """Authenticate with Steam and return session ticket."""
@@ -42,14 +73,22 @@ class PurePythonSteamAuth:
             # Initialize Steam client
             self.client = SteamClient()
 
-            # Set credential location for persistent auth
+            # Set credential location for persistent auth (CRITICAL for sentry files)
             self.client.set_credential_location(self.sentry_dir)
+            logger.info(f"Set credential location: {self.sentry_dir}")
+
+            # Check existing sentry file status
+            self.check_sentry_status(username)
 
             # Attempt login with 2FA support
             result = self._login_with_2fa_support(username, password)
 
             if result == EResult.OK and self.client.logged_on:
                 logger.info("Steam authentication successful!")
+
+                # Wait for sentry file creation (especially important after 2FA)
+                logger.info("Waiting for sentry file creation...")
+                self.wait_for_sentry_creation(username, timeout=10)
 
                 # Get session ticket for Boundless
                 ticket = self._get_session_ticket()
@@ -67,40 +106,44 @@ class PurePythonSteamAuth:
         except Exception as e:
             logger.error(f"Steam authentication error: {e}")
             return None
-        finally:
-            if self.client and self.client.logged_on:
-                self.client.logout()
-                logger.info("Logged out from Steam")
+        # NOTE: No logout() call - preserve Steam session for sentry file persistence
+        # This allows relogin() to work without 2FA on subsequent calls
 
     def _login_with_2fa_support(self, username: str, password: str) -> EResult:
         """Handle login with interactive 2FA support."""
 
-        # Try relogin first if available
+        # PRIORITY 1: Try relogin first if sentry file available
         try:
             if self.client.relogin_available:
-                logger.info("Attempting relogin with stored credentials...")
+                logger.info("Sentry file found - attempting relogin without 2FA...")
                 result = self.client.relogin()
                 if result == EResult.OK:
-                    logger.info("Relogin successful!")
+                    logger.info("Relogin successful! No 2FA required.")
                     return result
                 else:
-                    logger.info(f"Relogin failed ({result}), trying fresh login...")
+                    logger.info(f"Relogin failed ({result}), falling back to fresh login...")
         except Exception as e:
-            logger.info(f"Relogin attempt failed: {e}")
+            logger.info(f"Relogin attempt failed: {e}, trying fresh login...")
 
-        # Fresh login
-        logger.info("Attempting fresh login...")
+        # PRIORITY 2: Fresh login (may require 2FA)
+        logger.info("Attempting fresh login (may require 2FA)...")
         result = self.client.login(username, password)
 
         if result == EResult.OK:
-            logger.info("Login successful!")
+            logger.info("Fresh login successful!")
             return result
         elif result == EResult.AccountLoginDeniedNeedTwoFactor:
             logger.info("Steam Guard 2FA required - switching to interactive login")
-            return self.client.cli_login(username, password)
+            result = self.client.cli_login(username, password)
+            if result == EResult.OK:
+                logger.info("✅ 2FA authentication successful - sentry file should be created")
+            return result
         elif result == EResult.AccountLogonDenied:
             logger.info("Steam Guard email code required - switching to interactive login")
-            return self.client.cli_login(username, password)
+            result = self.client.cli_login(username, password)
+            if result == EResult.OK:
+                logger.info("✅ Email authentication successful - sentry file should be created")
+            return result
         elif result == EResult.TwoFactorCodeMismatch:
             logger.warning("2FA code mismatch - retrying with interactive login")
             return self.client.cli_login(username, password)

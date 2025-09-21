@@ -1,4 +1,5 @@
 from datetime import timedelta
+from io import BytesIO
 
 from django.conf import settings
 from django.contrib.sites.models import Site
@@ -135,3 +136,22 @@ def create_export_file(name, ext, description, content):
     ExportedFile.objects.create(
         name=name, description=description, exported_file=xlsx_file
     )
+
+
+def save_virtual_workbook(workbook):
+    """
+    Save an openpyxl workbook to memory and return the bytes.
+
+    This replaces the deprecated openpyxl.writer.excel.save_virtual_workbook
+    function which was removed in newer versions of openpyxl.
+
+    Args:
+        workbook: An openpyxl Workbook instance
+
+    Returns:
+        bytes: The workbook data as bytes
+    """
+    buffer = BytesIO()
+    workbook.save(buffer)
+    buffer.seek(0)
+    return buffer.getvalue()

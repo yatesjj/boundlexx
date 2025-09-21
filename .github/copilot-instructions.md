@@ -164,6 +164,12 @@ python manage.py prompt_steam_guard  # Interactive setup, stores sentry files in
 - Environment variables: `STEAM_USERNAMES`, `STEAM_PASSWORDS`, `BOUNDLESS_USERNAMES`, `BOUNDLESS_PASSWORDS`
 - Setting: `BOUNDLESS_DS_REQUIRES_AUTH=True`
 
+**Token Validity & Expiration:**
+- **Query Token**: 12 hours (43200 seconds) - automatically renewed
+- **Steam Session Tickets**: Single-use only - fresh generation for each auth
+- **Steam Sentry Files**: Indefinite until Steam invalidates (typically weeks/months)
+- **Manual 2FA**: Only required when sentry files expire (`python manage.py prompt_steam_guard`)
+
 **Testing Verified**: Full authentication chain working with real Steam credentials, automatic 2FA, and live world discovery tasks.
 
 ## Modernization & Migration Plan (2025) - FORWARD-LOOKING

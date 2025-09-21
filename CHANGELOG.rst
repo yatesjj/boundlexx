@@ -1,3 +1,14 @@
+2025-09-20
+----------
+
+* Fixes duplicate ``--color`` parameter warning in ``create_game_objects`` management command
+    by renaming color group processing parameter to ``--colors``
+* Validates Django 5.2.6 LTS + Python 3.12 complete environment setup reproducibility
+* Confirms Issue #25 container naming modernization (``boundlexx-django-dev``, etc.) working correctly
+* Verifies fresh container environment setup automation for development workflows
+* Tests complete game data ingestion pipeline (data → core → skills → recipes) functionality
+* Updates documentation and Copilot instructions with recent fixes and parameter changes
+
 2021-05-03
 ----------
 

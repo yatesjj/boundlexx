@@ -3,8 +3,9 @@
 Unified Boundlexx Container Setup Script
 
 Creates Docker Compose override configurations for:
-- Development environments (Django on port 28000)
-- Test environments (test- prefix, Django on port 28001)
+- Development environments (Django on port 28001)
+- Test environments (test- prefix, Django on port 28002)
+- Production environments (Django on port 28000)
 
 All naming is handled by Docker Compose project naming (folder-based).
 
@@ -12,6 +13,7 @@ Usage:
     python setup_containers.py                    # Interactive mode
     python setup_containers.py --env dev          # Development setup
     python setup_containers.py --env test         # Test setup
+    python setup_containers.py --env production   # Production setup
     python setup_containers.py --dry-run          # Preview without writing
 """
 
@@ -25,34 +27,37 @@ def get_environment_choice():
     print("\n🐳 Boundlexx Container Setup")
     print("=" * 40)
     print("Choose your environment type:")
-    print("  1. Development (Django on port 28000)")
-    print("  2. Test (test- prefix, Django on port 28001)")
+    print("  1. Development (Django on port 28001)")
+    print("  2. Test (test- prefix, Django on port 28002)")
+    print("  3. Production (Django on port 28000)")
     print()
 
     while True:
-        choice = input("Enter choice (1 or 2): ").strip()
+        choice = input("Enter choice (1, 2, or 3): ").strip()
         if choice == "1":
             return "dev"
         elif choice == "2":
             return "test"
+        elif choice == "3":
+            return "production"
         else:
-            print("Invalid choice. Please enter 1 or 2.")
+            print("Invalid choice. Please enter 1, 2, or 3.")
 
 
 def create_development_override():
     """Create development environment configuration."""
     return """# Auto-generated development environment override
 # Environment: Development
-# Django port: 28000
+# Django port: 28001
 
 services:
-  django: &django
-    container_name: django-1
+  boundlexx-django: &django
+    container_name: boundlexx-django-dev
     env_file:
       - ./.env
       - ./.local.env
     ports:
-      - "28000:8000"
+      - "28001:8000"
     volumes:
       - .:/app
       ## Replace with path to your Boundless install
@@ -60,53 +65,116 @@ services:
       ## Replace with path to your out folder for `boundless_icon_render`
       - "/c/VSCode/boundless_headless_renderer/out:/boundless-icons"
     depends_on:
-      - postgres
-      - redis
+      - boundlexx-postgres
+      - boundlexx-redis
     networks:
       - app-network
+    labels:
+      app.kubernetes.io/name: boundlexx-django
+      app.kubernetes.io/component: django
+      app.kubernetes.io/part-of: boundlexx
+      app.kubernetes.io/instance: boundlexx-dev
+      app.kubernetes.io/environment: development
+      app.kubernetes.io/managed-by: docker-compose
 
-  manage:
+  boundlexx-manage:
     <<: *django
-    container_name: manage-1
+    container_name: boundlexx-manage-dev
     ports: []
+    labels:
+      app.kubernetes.io/name: boundlexx-django
+      app.kubernetes.io/component: manage
+      app.kubernetes.io/part-of: boundlexx
+      app.kubernetes.io/instance: boundlexx-dev
+      app.kubernetes.io/environment: development
+      app.kubernetes.io/managed-by: docker-compose
 
-  test:
+  boundlexx-test:
     <<: *django
-    container_name: test-1
+    container_name: boundlexx-test-dev
     ports: []
+    labels:
+      app.kubernetes.io/name: boundlexx-django
+      app.kubernetes.io/component: test
+      app.kubernetes.io/part-of: boundlexx
+      app.kubernetes.io/instance: boundlexx-dev
+      app.kubernetes.io/environment: development
+      app.kubernetes.io/managed-by: docker-compose
 
-  lint:
+  boundlexx-lint:
     <<: *django
-    container_name: lint-1
+    container_name: boundlexx-lint-dev
     ports: []
+    labels:
+      app.kubernetes.io/name: boundlexx-django
+      app.kubernetes.io/component: lint
+      app.kubernetes.io/part-of: boundlexx
+      app.kubernetes.io/instance: boundlexx-dev
+      app.kubernetes.io/environment: development
+      app.kubernetes.io/managed-by: docker-compose
 
-  format:
+  boundlexx-format:
     <<: *django
-    container_name: format-1
+    container_name: boundlexx-format-dev
     ports: []
+    labels:
+      app.kubernetes.io/name: boundlexx-django
+      app.kubernetes.io/component: format
+      app.kubernetes.io/part-of: boundlexx
+      app.kubernetes.io/instance: boundlexx-dev
+      app.kubernetes.io/environment: development
+      app.kubernetes.io/managed-by: docker-compose
 
-  celery:
+  boundlexx-celery:
     <<: *django
-    container_name: celery-1
+    container_name: boundlexx-celery-dev
     ports: []
+    labels:
+      app.kubernetes.io/name: boundlexx-django
+      app.kubernetes.io/component: celery
+      app.kubernetes.io/part-of: boundlexx
+      app.kubernetes.io/instance: boundlexx-dev
+      app.kubernetes.io/environment: development
+      app.kubernetes.io/managed-by: docker-compose
 
-  celerybeat:
+  boundlexx-celerybeat:
     <<: *django
-    container_name: celerybeat-1
+    container_name: boundlexx-celerybeat-dev
     ports: []
+    labels:
+      app.kubernetes.io/name: boundlexx-django
+      app.kubernetes.io/component: celerybeat
+      app.kubernetes.io/part-of: boundlexx
+      app.kubernetes.io/instance: boundlexx-dev
+      app.kubernetes.io/environment: development
+      app.kubernetes.io/managed-by: docker-compose
 
-  huey-consumer:
+  boundlexx-huey-consumer:
     <<: *django
-    container_name: huey-consumer-1
+    container_name: boundlexx-huey-consumer-dev
     ports: []
+    labels:
+      app.kubernetes.io/name: boundlexx-django
+      app.kubernetes.io/component: huey-consumer
+      app.kubernetes.io/part-of: boundlexx
+      app.kubernetes.io/instance: boundlexx-dev
+      app.kubernetes.io/environment: development
+      app.kubernetes.io/managed-by: docker-compose
 
-  huey-scheduler:
+  boundlexx-huey-scheduler:
     <<: *django
-    container_name: huey-scheduler-1
+    container_name: boundlexx-huey-scheduler-dev
     ports: []
+    labels:
+      app.kubernetes.io/name: boundlexx-django
+      app.kubernetes.io/component: huey-scheduler
+      app.kubernetes.io/part-of: boundlexx
+      app.kubernetes.io/instance: boundlexx-dev
+      app.kubernetes.io/environment: development
+      app.kubernetes.io/managed-by: docker-compose
 
-  postgres:
-    container_name: postgres-1
+  boundlexx-postgres:
+    container_name: boundlexx-postgres-dev
     volumes:
       - postgres-data:/var/lib/postgresql/data
     env_file:
@@ -114,11 +182,25 @@ services:
       - ./.local.env
     networks:
       - app-network
+    labels:
+      app.kubernetes.io/name: boundlexx-postgres
+      app.kubernetes.io/component: database
+      app.kubernetes.io/part-of: boundlexx
+      app.kubernetes.io/instance: boundlexx-dev
+      app.kubernetes.io/environment: development
+      app.kubernetes.io/managed-by: docker-compose
 
-  redis:
-    container_name: redis-1
+  boundlexx-redis:
+    container_name: boundlexx-redis-dev
     networks:
       - app-network
+    labels:
+      app.kubernetes.io/name: boundlexx-redis
+      app.kubernetes.io/component: cache
+      app.kubernetes.io/part-of: boundlexx
+      app.kubernetes.io/instance: boundlexx-dev
+      app.kubernetes.io/environment: development
+      app.kubernetes.io/managed-by: docker-compose
 
 volumes:
   postgres-data:
@@ -134,16 +216,16 @@ def create_test_override():
     """Create test environment configuration."""
     return """# Auto-generated test environment override
 # Environment: Test
-# Django port: 28001
+# Django port: 28002
 
 services:
-  django:
-    container_name: test-django-1
+  boundlexx-django:
+    container_name: boundlexx-django-test
     env_file:
       - ./.env
       - ./.local.env
     ports:
-      - "28001:8000"
+      - "28002:8000"
     volumes:
       - .:/app
       ## Replace with path to your Boundless install
@@ -151,99 +233,160 @@ services:
       ## Replace with path to your out folder for `boundless_icon_render`
       - "/c/VSCode/boundless_headless_renderer/out:/boundless-icons"
     depends_on:
-      - postgres
-      - redis
+      - boundlexx-postgres
+      - boundlexx-redis
     networks:
       - test-app-network
+    labels:
+      app.kubernetes.io/name: boundlexx-django
+      app.kubernetes.io/component: django
+      app.kubernetes.io/part-of: boundlexx
+      app.kubernetes.io/instance: boundlexx-test
+      app.kubernetes.io/environment: test
+      app.kubernetes.io/managed-by: docker-compose
 
-  manage:
-    container_name: test-manage-1
+  boundlexx-manage:
+    container_name: boundlexx-manage-test
     env_file:
       - ./.env
       - ./.local.env
     depends_on:
-      - postgres
-      - redis
+      - boundlexx-postgres
+      - boundlexx-redis
     networks:
       - test-app-network
+    labels:
+      app.kubernetes.io/name: boundlexx-django
+      app.kubernetes.io/component: manage
+      app.kubernetes.io/part-of: boundlexx
+      app.kubernetes.io/instance: boundlexx-test
+      app.kubernetes.io/environment: test
+      app.kubernetes.io/managed-by: docker-compose
 
-  test:
-    container_name: test-test-1
+  boundlexx-test:
+    container_name: boundlexx-test-test
     env_file:
       - ./.env
       - ./.local.env
     depends_on:
-      - postgres
-      - redis
+      - boundlexx-postgres
+      - boundlexx-redis
     networks:
       - test-app-network
+    labels:
+      app.kubernetes.io/name: boundlexx-django
+      app.kubernetes.io/component: test
+      app.kubernetes.io/part-of: boundlexx
+      app.kubernetes.io/instance: boundlexx-test
+      app.kubernetes.io/environment: test
+      app.kubernetes.io/managed-by: docker-compose
 
-  lint:
-    container_name: test-lint-1
+  boundlexx-lint:
+    container_name: boundlexx-lint-test
     env_file:
       - ./.env
       - ./.local.env
     depends_on: []
     networks:
       - test-app-network
+    labels:
+      app.kubernetes.io/name: boundlexx-django
+      app.kubernetes.io/component: lint
+      app.kubernetes.io/part-of: boundlexx
+      app.kubernetes.io/instance: boundlexx-test
+      app.kubernetes.io/environment: test
+      app.kubernetes.io/managed-by: docker-compose
 
-  format:
-    container_name: test-format-1
+  boundlexx-format:
+    container_name: boundlexx-format-test
     env_file:
       - ./.env
       - ./.local.env
     depends_on: []
     networks:
       - test-app-network
+    labels:
+      app.kubernetes.io/name: boundlexx-django
+      app.kubernetes.io/component: format
+      app.kubernetes.io/part-of: boundlexx
+      app.kubernetes.io/instance: boundlexx-test
+      app.kubernetes.io/environment: test
+      app.kubernetes.io/managed-by: docker-compose
 
-  celery:
-    container_name: test-celery-1
+  boundlexx-celery:
+    container_name: boundlexx-celery-test
     env_file:
       - ./.env
       - ./.local.env
     depends_on:
-      - postgres
-      - redis
+      - boundlexx-postgres
+      - boundlexx-redis
     networks:
       - test-app-network
+    labels:
+      app.kubernetes.io/name: boundlexx-django
+      app.kubernetes.io/component: celery
+      app.kubernetes.io/part-of: boundlexx
+      app.kubernetes.io/instance: boundlexx-test
+      app.kubernetes.io/environment: test
+      app.kubernetes.io/managed-by: docker-compose
 
-  celerybeat:
-    container_name: test-celerybeat-1
+  boundlexx-celerybeat:
+    container_name: boundlexx-celerybeat-test
     env_file:
       - ./.env
       - ./.local.env
     depends_on:
-      - postgres
-      - redis
+      - boundlexx-postgres
+      - boundlexx-redis
     networks:
       - test-app-network
+    labels:
+      app.kubernetes.io/name: boundlexx-django
+      app.kubernetes.io/component: celerybeat
+      app.kubernetes.io/part-of: boundlexx
+      app.kubernetes.io/instance: boundlexx-test
+      app.kubernetes.io/environment: test
+      app.kubernetes.io/managed-by: docker-compose
 
-  huey-consumer:
-    container_name: test-huey-consumer-1
-    entrypoint: /usr/local/bin/start-huey-consumer
+  boundlexx-huey-consumer:
+    container_name: boundlexx-huey-consumer-test
     env_file:
       - ./.env
       - ./.local.env
     depends_on:
-      - postgres
-      - redis
-    networks:
-      - boundlexx-test-network
-
-  huey-scheduler:
-    container_name: boundlexx-test-huey-scheduler-1
-    entrypoint: /usr/local/bin/start-huey-scheduler
-    env_file:
-      - ./.env
-      - ./.local.env
-    depends_on:
-      - postgres
-      - redis
+      - boundlexx-postgres
+      - boundlexx-redis
     networks:
       - test-app-network
+    labels:
+      app.kubernetes.io/name: boundlexx-django
+      app.kubernetes.io/component: huey-consumer
+      app.kubernetes.io/part-of: boundlexx
+      app.kubernetes.io/instance: boundlexx-test
+      app.kubernetes.io/environment: test
+      app.kubernetes.io/managed-by: docker-compose
 
-  postgres:
-    container_name: test-postgres-1
+  boundlexx-huey-scheduler:
+    container_name: boundlexx-huey-scheduler-test
+    env_file:
+      - ./.env
+      - ./.local.env
+    depends_on:
+      - boundlexx-postgres
+      - boundlexx-redis
+    networks:
+      - test-app-network
+    labels:
+      app.kubernetes.io/name: boundlexx-django
+      app.kubernetes.io/component: huey-scheduler
+      app.kubernetes.io/part-of: boundlexx
+      app.kubernetes.io/instance: boundlexx-test
+      app.kubernetes.io/environment: test
+      app.kubernetes.io/managed-by: docker-compose
+
+  boundlexx-postgres:
+    container_name: boundlexx-postgres-test
     volumes:
       - test-postgres-data:/var/lib/postgresql/data
     env_file:
@@ -251,11 +394,25 @@ services:
       - ./.local.env
     networks:
       - test-app-network
+    labels:
+      app.kubernetes.io/name: boundlexx-postgres
+      app.kubernetes.io/component: database
+      app.kubernetes.io/part-of: boundlexx
+      app.kubernetes.io/instance: boundlexx-test
+      app.kubernetes.io/environment: test
+      app.kubernetes.io/managed-by: docker-compose
 
-  redis:
-    container_name: test-redis-1
+  boundlexx-redis:
+    container_name: boundlexx-redis-test
     networks:
       - test-app-network
+    labels:
+      app.kubernetes.io/name: boundlexx-redis
+      app.kubernetes.io/component: cache
+      app.kubernetes.io/part-of: boundlexx
+      app.kubernetes.io/instance: boundlexx-test
+      app.kubernetes.io/environment: test
+      app.kubernetes.io/managed-by: docker-compose
 
 volumes:
   test-postgres-data:
@@ -263,6 +420,175 @@ volumes:
 networks:
   test-app-network:
     name: test-app-network
+    driver: bridge
+"""
+
+
+def create_production_override():
+    """Create production environment configuration."""
+    return """# Auto-generated production environment override
+# Environment: Production
+# Django port: 28000
+
+services:
+  boundlexx-django: &django
+    container_name: boundlexx-django
+    env_file:
+      - ./.env
+      - ./.local.env
+    ports:
+      - "28000:8000"
+    volumes:
+      - .:/app
+      ## Replace with path to your Boundless install
+      - "/c/Program Files (x86)/Steam/steamapps/common/Boundless:/boundless"
+      ## Replace with path to your out folder for `boundless_icon_render`
+      - "/c/VSCode/boundless_headless_renderer/out:/boundless-icons"
+    depends_on:
+      - boundlexx-postgres
+      - boundlexx-redis
+    networks:
+      - app-network
+    labels:
+      app.kubernetes.io/name: boundlexx-django
+      app.kubernetes.io/component: django
+      app.kubernetes.io/part-of: boundlexx
+      app.kubernetes.io/instance: boundlexx
+      app.kubernetes.io/environment: production
+      app.kubernetes.io/managed-by: kubernetes
+
+  boundlexx-manage:
+    <<: *django
+    container_name: boundlexx-manage
+    ports: []
+    labels:
+      app.kubernetes.io/name: boundlexx-django
+      app.kubernetes.io/component: manage
+      app.kubernetes.io/part-of: boundlexx
+      app.kubernetes.io/instance: boundlexx
+      app.kubernetes.io/environment: production
+      app.kubernetes.io/managed-by: kubernetes
+
+  boundlexx-test:
+    <<: *django
+    container_name: boundlexx-test
+    ports: []
+    labels:
+      app.kubernetes.io/name: boundlexx-django
+      app.kubernetes.io/component: test
+      app.kubernetes.io/part-of: boundlexx
+      app.kubernetes.io/instance: boundlexx
+      app.kubernetes.io/environment: production
+      app.kubernetes.io/managed-by: kubernetes
+
+  boundlexx-lint:
+    <<: *django
+    container_name: boundlexx-lint
+    ports: []
+    depends_on: []
+    labels:
+      app.kubernetes.io/name: boundlexx-django
+      app.kubernetes.io/component: lint
+      app.kubernetes.io/part-of: boundlexx
+      app.kubernetes.io/instance: boundlexx
+      app.kubernetes.io/environment: production
+      app.kubernetes.io/managed-by: kubernetes
+
+  boundlexx-format:
+    <<: *django
+    container_name: boundlexx-format
+    ports: []
+    depends_on: []
+    labels:
+      app.kubernetes.io/name: boundlexx-django
+      app.kubernetes.io/component: format
+      app.kubernetes.io/part-of: boundlexx
+      app.kubernetes.io/instance: boundlexx
+      app.kubernetes.io/environment: production
+      app.kubernetes.io/managed-by: kubernetes
+
+  boundlexx-celery:
+    <<: *django
+    container_name: boundlexx-celery
+    ports: []
+    command: ["celery", "--app=config.celery_app", "worker", "--loglevel=info"]
+    labels:
+      app.kubernetes.io/name: boundlexx-django
+      app.kubernetes.io/component: celery
+      app.kubernetes.io/part-of: boundlexx
+      app.kubernetes.io/instance: boundlexx
+      app.kubernetes.io/environment: production
+      app.kubernetes.io/managed-by: kubernetes
+
+  boundlexx-celerybeat:
+    <<: *django
+    container_name: boundlexx-celerybeat
+    ports: []
+    command: ["celery", "--app=config.celery_app", "beat", "--loglevel=info"]
+    labels:
+      app.kubernetes.io/name: boundlexx-django
+      app.kubernetes.io/component: celerybeat
+      app.kubernetes.io/part-of: boundlexx
+      app.kubernetes.io/instance: boundlexx
+      app.kubernetes.io/environment: production
+      app.kubernetes.io/managed-by: kubernetes
+
+  boundlexx-huey-consumer:
+    <<: *django
+    container_name: boundlexx-huey-consumer
+    ports: []
+    command: ["python", "manage.py", "run_huey"]
+    labels:
+      app.kubernetes.io/name: boundlexx-django
+      app.kubernetes.io/component: huey-consumer
+      app.kubernetes.io/part-of: boundlexx
+      app.kubernetes.io/instance: boundlexx
+      app.kubernetes.io/environment: production
+      app.kubernetes.io/managed-by: kubernetes
+
+  boundlexx-huey-scheduler:
+    <<: *django
+    container_name: boundlexx-huey-scheduler
+    ports: []
+    command: ["python", "manage.py", "run_huey", "--periodic"]
+    labels:
+      app.kubernetes.io/name: boundlexx-django
+      app.kubernetes.io/component: huey-scheduler
+      app.kubernetes.io/part-of: boundlexx
+      app.kubernetes.io/instance: boundlexx
+      app.kubernetes.io/environment: production
+      app.kubernetes.io/managed-by: kubernetes
+
+  boundlexx-postgres:
+    container_name: boundlexx-postgres
+    networks:
+      - app-network
+    labels:
+      app.kubernetes.io/name: boundlexx-postgres
+      app.kubernetes.io/component: database
+      app.kubernetes.io/part-of: boundlexx
+      app.kubernetes.io/instance: boundlexx
+      app.kubernetes.io/environment: production
+      app.kubernetes.io/managed-by: kubernetes
+
+  boundlexx-redis:
+    container_name: boundlexx-redis
+    networks:
+      - app-network
+    labels:
+      app.kubernetes.io/name: boundlexx-redis
+      app.kubernetes.io/component: cache
+      app.kubernetes.io/part-of: boundlexx
+      app.kubernetes.io/instance: boundlexx
+      app.kubernetes.io/environment: production
+      app.kubernetes.io/managed-by: kubernetes
+
+volumes:
+  postgres-data:
+
+networks:
+  app-network:
+    name: app-network
     driver: bridge
 """
 
@@ -281,7 +607,12 @@ def update_devcontainer_config(env_type, dry_run=False):
             content = f.read()
 
         # Determine new port based on environment
-        new_port = 28000 if env_type == "dev" else 28001
+        if env_type == "dev":
+            new_port = 28001
+        elif env_type == "test":
+            new_port = 28002
+        else:  # production
+            new_port = 28000
 
         # Use regex to find and update forwardPorts
         import re
@@ -331,32 +662,60 @@ def update_devcontainer_config(env_type, dry_run=False):
 def setup_environment(env_type, dry_run=False, force=False):
     """Set up the specified environment."""
 
-    # Auto-copy .env to .local.env if missing
+    # Auto-copy .env to .local.env with overwrite prompt
     env_file = Path(".env")
     local_env_file = Path(".local.env")
-    if not local_env_file.exists() and env_file.exists():
-        if not dry_run:
-            # Use binary mode to preserve line endings (especially Linux LF)
-            local_env_file.write_bytes(env_file.read_bytes())
-            print(f"✅ Created {local_env_file} from {env_file}")
-        else:
-            print(f"📋 Would create {local_env_file} from {env_file}")
+    if env_file.exists():
+        should_create_local_env = False
+
+        if not local_env_file.exists():
+            should_create_local_env = True
+        elif not force and not dry_run:
+            prompt = f"\n⚠️  {local_env_file} already exists. Overwrite? (y/N): "
+            overwrite = input(prompt).strip().lower()
+            should_create_local_env = overwrite == "y"
+        elif force:
+            should_create_local_env = True
+        elif dry_run:
+            should_create_local_env = True
+
+        if should_create_local_env:
+            if not dry_run:
+                # Use binary mode to preserve line endings (especially Linux LF)
+                local_env_file.write_bytes(env_file.read_bytes())
+                print(f"✅ Created {local_env_file} from {env_file}")
+            else:
+                if local_env_file.exists():
+                    print(f"📋 Would overwrite {local_env_file} from {env_file}")
+                else:
+                    print(f"📋 Would create {local_env_file} from {env_file}")
+        elif local_env_file.exists() and not dry_run:
+            print(f"ℹ️  Keeping existing {local_env_file}")
+    elif not dry_run:
+        print(f"⚠️  Warning: {env_file} not found, cannot create {local_env_file}")
 
     # Determine configuration
     if env_type == "dev":
         env_name = "Development"
+        port = 28001
+        container_suffix = "-dev"
+        network_name = "app-network"
+        volume_name = "postgres-data"
+        override_content = create_development_override()
+    elif env_type == "test":
+        env_name = "Test"
+        port = 28002
+        container_suffix = "-test"
+        network_name = "test-app-network"
+        volume_name = "test-postgres-data"
+        override_content = create_test_override()
+    else:  # production
+        env_name = "Production"
         port = 28000
         container_suffix = ""
         network_name = "app-network"
         volume_name = "postgres-data"
-        override_content = create_development_override()
-    else:  # test
-        env_name = "Test"
-        port = 28001
-        container_suffix = "test-"
-        network_name = "test-app-network"
-        volume_name = "test-postgres-data"
-        override_content = create_test_override()
+        override_content = create_production_override()
 
     project_name = Path.cwd().name  # folder name becomes Docker Compose project
 
@@ -365,7 +724,10 @@ def setup_environment(env_type, dry_run=False, force=False):
     print(f"   Django port: {port}")
     print(f"   Network: {project_name}_{network_name}")
     print(f"   Volumes: {project_name}_{volume_name}")
-    print(f"   Containers: {project_name}_{container_suffix}django-1, etc.")
+    print(
+        f"   Containers: boundlexx-django{container_suffix}, "
+        f"boundlexx-postgres{container_suffix}, etc."
+    )
 
     # Check for existing override file
     override_path = Path("docker-compose.override.yml")
@@ -418,17 +780,18 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  python setup_containers.py                    # Interactive mode
-  python setup_containers.py --env dev          # Development setup
-  python setup_containers.py --env test         # Test setup
-  python setup_containers.py --env dev --dry-run  # Preview dev setup
+  python setup_containers.py                       # Interactive mode
+  python setup_containers.py --env dev             # Development setup
+  python setup_containers.py --env test            # Test setup
+  python setup_containers.py --env production      # Production setup
+  python setup_containers.py --env dev --dry-run   # Preview dev setup
 """,
     )
 
     parser.add_argument(
         "--env",
-        choices=["dev", "test"],
-        help="Environment type: dev (port 28000) or test (port 28001)",
+        choices=["dev", "test", "production"],
+        help="Environment type: dev (28001), test (28002), or production (28000)",
     )
     parser.add_argument(
         "--dry-run",

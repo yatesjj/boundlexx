@@ -2,7 +2,7 @@ volumes:
   local_postgres_data: {}
 
 services:
-  django: &django
+  boundlexx-django: &django
     build:
       context: .
       dockerfile: ./docker/django/Dockerfile
@@ -13,39 +13,69 @@ services:
         - boundlexx-django-dev
     image: boundlexx-django-dev
     depends_on:
-      - postgres
-      - redis
+      - boundlexx-postgres
+      - boundlexx-redis
     volumes:
       - .:/app
     env_file:
       - ./.env
     command: start
+    labels:
+      app.kubernetes.io/name: boundlexx-django
+      app.kubernetes.io/component: django
+      app.kubernetes.io/part-of: boundlexx
+      app.kubernetes.io/instance: boundlexx
+      app.kubernetes.io/environment: production
 
-  manage:
+  boundlexx-manage:
     <<: *django
     environment:
       - DJANGO_MANAGE=1
     command: ""
+    labels:
+      app.kubernetes.io/name: boundlexx-django
+      app.kubernetes.io/component: manage
+      app.kubernetes.io/part-of: boundlexx
+      app.kubernetes.io/instance: boundlexx
+      app.kubernetes.io/environment: production
 
-  test:
+  boundlexx-test:
     <<: *django
     environment:
       - PYTEST=1
     command: ""
+    labels:
+      app.kubernetes.io/name: boundlexx-django
+      app.kubernetes.io/component: test
+      app.kubernetes.io/part-of: boundlexx
+      app.kubernetes.io/instance: boundlexx
+      app.kubernetes.io/environment: production
 
-  lint:
+  boundlexx-lint:
     <<: *django
     depends_on: []
     entrypoint: /bin/bash
     command: -c "lint-code"
+    labels:
+      app.kubernetes.io/name: boundlexx-django
+      app.kubernetes.io/component: lint
+      app.kubernetes.io/part-of: boundlexx
+      app.kubernetes.io/instance: boundlexx
+      app.kubernetes.io/environment: production
 
-  format:
+  boundlexx-format:
     <<: *django
     depends_on: []
     entrypoint: /bin/bash
     command: -c "format-code"
+    labels:
+      app.kubernetes.io/name: boundlexx-django
+      app.kubernetes.io/component: format
+      app.kubernetes.io/part-of: boundlexx
+      app.kubernetes.io/instance: boundlexx
+      app.kubernetes.io/environment: production
 
-  postgres:
+  boundlexx-postgres:
     build:
       context: .
       dockerfile: ./docker/postgres/Dockerfile
@@ -56,37 +86,73 @@ services:
     shm_size: 1g
     volumes:
       - local_postgres_data:/var/lib/postgresql/data
+    labels:
+      app.kubernetes.io/name: boundlexx-postgres
+      app.kubernetes.io/component: postgres
+      app.kubernetes.io/part-of: boundlexx
+      app.kubernetes.io/instance: boundlexx
+      app.kubernetes.io/environment: production
     env_file:
       - ./.env
 
-  redis:
+  boundlexx-redis:
     image: redis:5.0
     command: redis-server --appendonly yes
+    labels:
+      app.kubernetes.io/name: boundlexx-redis
+      app.kubernetes.io/component: redis
+      app.kubernetes.io/part-of: boundlexx
+      app.kubernetes.io/instance: boundlexx
+      app.kubernetes.io/environment: production
 
-  celery:
+  boundlexx-celery:
     <<: *django
     depends_on:
-      - redis
-      - postgres
+      - boundlexx-redis
+      - boundlexx-postgres
     command: start-celeryworker
     environment:
       - CELERY_WORKER_QUEUES=default,distance,cache,notify,poll,shop,control
+    labels:
+      app.kubernetes.io/name: boundlexx-django
+      app.kubernetes.io/component: celery
+      app.kubernetes.io/part-of: boundlexx
+      app.kubernetes.io/instance: boundlexx
+      app.kubernetes.io/environment: production
 
-  celerybeat:
+  boundlexx-celerybeat:
     <<: *django
     depends_on:
-      - redis
-      - postgres
+      - boundlexx-redis
+      - boundlexx-postgres
     command: start-celerybeat
+    labels:
+      app.kubernetes.io/name: boundlexx-django
+      app.kubernetes.io/component: celerybeat
+      app.kubernetes.io/part-of: boundlexx
+      app.kubernetes.io/instance: boundlexx
+      app.kubernetes.io/environment: production
 
-  huey-consumer:
+  boundlexx-huey-consumer:
     <<: *django
     depends_on:
-      - redis
+      - boundlexx-redis
     command: start-huey-consumer
+    labels:
+      app.kubernetes.io/name: boundlexx-django
+      app.kubernetes.io/component: huey-consumer
+      app.kubernetes.io/part-of: boundlexx
+      app.kubernetes.io/instance: boundlexx
+      app.kubernetes.io/environment: production
 
-  huey-scheduler:
+  boundlexx-huey-scheduler:
     <<: *django
     depends_on:
-      - redis
+      - boundlexx-redis
     command: start-huey-scheduler
+    labels:
+      app.kubernetes.io/name: boundlexx-django
+      app.kubernetes.io/component: huey-scheduler
+      app.kubernetes.io/part-of: boundlexx
+      app.kubernetes.io/instance: boundlexx
+      app.kubernetes.io/environment: production

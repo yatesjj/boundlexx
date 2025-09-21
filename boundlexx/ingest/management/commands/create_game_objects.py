@@ -35,7 +35,7 @@ BASE = "boundlexx.ingest.ingest"
 )
 @click.option(
     "-l",
-    "--color",
+    "--colors",
     is_flag=True,
     help="Color Group",
 )

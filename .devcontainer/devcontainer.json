@@ -12,13 +12,13 @@
     ],
     // The 'service' property is the name of the service for the container that VS Code should
     // use. Update this value and .devcontainer/docker-compose.yml to the real service name.
-    "service": "django",
+    "service": "boundlexx-django",
     // The optional 'workspaceFolder' property is the path VS Code should open by default when
     // connected. This is typically a file mount in .devcontainer/docker-compose.yml
     "workspaceFolder": "/app",
     // Uncomment the next line if you want start specific services in your Docker Compose config.
     "runServices": [
-        "django"
+        "boundlexx-django"
     ],
     // Uncomment the next line if you want to keep your containers running after VS Code shuts down.
     // "shutdownAction": "none",
@@ -27,7 +27,7 @@
     // Uncomment to connect as a non-root user. See https://aka.ms/vscode-remote/containers/non-root.
     "remoteUser": "django",
     "forwardPorts": [
-        28000
+        28001
     ],
     // IDE specific configurations
     "customizations": {

@@ -7,7 +7,7 @@ This directory contains scripts that were developed during the modernization pro
 ### Container Setup Scripts (Legacy)
 - **`archive_setup_containers_broken.py`**: Corrupted version of setup script (Sept 2025)
 - **`archive_setup_development_container_improved.py`**: Early development container setup
-- **`archive_setup_test_container.py`**: Early test container setup  
+- **`archive_setup_test_container.py`**: Early test container setup
 - **`archive_run_for_parallel_test_containers.py`**: Complex parallel testing script
 
 ### Utility Scripts (Archived Sept 2025)
@@ -18,7 +18,7 @@ This directory contains scripts that were developed during the modernization pro
 ### Django-Filter Testing Scripts (Archived Sept 2025)
 - **`archive_check_method.py`**: Testing script for checking django-filter method availability
 - **`archive_test_25_1.py`**: Testing script for django-filter 25.1 compatibility
-- **`archive_test_25_1_simple.py`**: Simplified version of 25.1 testing script  
+- **`archive_test_25_1_simple.py`**: Simplified version of 25.1 testing script
 - **`archive_test_django_filter.py`**: General django-filter version testing script
 
 ### Legacy Scripts Status:
@@ -51,7 +51,7 @@ This directory contains scripts that were developed during the modernization pro
 ## When to consider using archived scripts:
 
 - If you need to run many parallel test instances from a single repo copy
-- If disk space becomes a major constraint  
+- If disk space becomes a major constraint
 - If the workflow changes to require more complex testing scenarios
 - For historical reference during troubleshooting
 
@@ -59,7 +59,7 @@ This directory contains scripts that were developed during the modernization pro
 
 ```bash
 # Simple separate folders approach
-C:\VSCode\boundlexx-yatesjj\boundlexx-yatesjj\     # Main development
+C:\VSCode\boundlexx-yatesjj\dev-boundlexx\         # Main development
 C:\VSCode\boundlexx-test-pr2\boundlexx\            # Test environment
 C:\VSCode\boundlexx-experiment\boundlexx\          # Experiment
 ```

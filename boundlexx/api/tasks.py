@@ -14,7 +14,6 @@ from django.db.models import Q
 from django.utils import timezone
 from django_celery_beat.models import IntervalSchedule, PeriodicTask
 from openpyxl import Workbook
-from openpyxl.writer.excel import save_virtual_workbook
 from requests.exceptions import ReadTimeout
 
 from boundlexx.api.utils import (
@@ -23,6 +22,7 @@ from boundlexx.api.utils import (
     PURGE_GROUPS,
     create_export_file,
     queue_purge_paths,
+    save_virtual_workbook,
     set_column_widths,
 )
 from boundlexx.boundless.models import Item, World, WorldBlockColor

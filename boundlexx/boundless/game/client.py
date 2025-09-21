@@ -254,42 +254,30 @@ class BoundlessClient:
         return response.json()["data"]
 
     def _get_steam_session_ticket(self, username, password):
-        env = {
-            # first auth will require 2FA
-            # directory required to prevent future requests
-            # directory can be anywhere
-            "STEAM_SENTRY_DIR": settings.STEAM_SENTRY_DIR,
-            "STEAM_USERNAME": username,
-            "STEAM_PASSWORD": password,
-            "STEAM_APP_ID": str(settings.STEAM_APP_ID),
-            # node script needs this to not explode...
-            "HOME": str(settings.ROOT_DIR),
-            "NODE_PATH": settings.STEAM_AUTH_NODE_MODULES,
-        }
+        """Get Steam session ticket using pure Python approach"""
+        # Pure Python approach only (Node.js fallback disabled)
+        try:
+            from boundlexx.boundless.game.steam_auth_pure_python import (
+                get_steam_session_ticket_pure_python,
+            )
 
-        tries = 5
-        while True:
-            try:
-                process = subprocess.run(
-                    [settings.STEAM_AUTH_SCRIPT],
-                    capture_output=True,
-                    check=True,
-                    shell=True,  # nosec
-                    env=env,
-                )
-            except subprocess.CalledProcessError as e:
-                logger.error(e.stdout)
-                logger.error(e.stderr)
+            logger.info("Using pure Python Steam authentication...")
+            ticket = get_steam_session_ticket_pure_python(username, password)
 
-                if tries <= 0:
-                    raise
+            if ticket:
+                logger.info("✅ Pure Python Steam authentication successful!")
+                return ticket
             else:
-                break
-
-            tries -= 1
-            time.sleep(5)
-
-        return process.stdout.decode("utf8").strip()
+                logger.error("❌ Pure Python Steam authentication failed!")
+                raise Exception(
+                    "Pure Python Steam authentication failed - Node.js fallback disabled"
+                )
+        except ImportError as e:
+            logger.error(f"Pure Python Steam auth not available: {e}")
+            raise Exception("Pure Python Steam auth module not found")
+        except Exception as e:
+            logger.error(f"Pure Python Steam auth failed: {e}")
+            raise
 
     def _authentiated_post(
         self, path, poll_token=None, api_url=None, authenticate=True

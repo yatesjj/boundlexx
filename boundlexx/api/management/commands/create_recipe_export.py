@@ -1,9 +1,12 @@
 import djclick as click
 from openpyxl import Workbook
-from openpyxl.writer.excel import save_virtual_workbook
 
 from boundlexx.api.tasks import purge_static_cache
-from boundlexx.api.utils import create_export_file, set_column_widths
+from boundlexx.api.utils import (
+    create_export_file,
+    save_virtual_workbook,
+    set_column_widths,
+)
 from boundlexx.boundless.models import Recipe, RecipeGroup
 
 FILENAME = "recipe_export"

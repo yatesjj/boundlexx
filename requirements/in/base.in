@@ -47,6 +47,6 @@ pydiscourse
 python-slugify
 pyyaml
 semver
-# steam[client]  # TODO: Re-enable after gevent compatibility resolved
+steam[client]==1.4.4  # Re-enabled: gevent 25.9.1 + Python 3.12 compatibility confirmed
 uritemplate
 httpx[http2]
