@@ -1,6 +1,43 @@
 # Copilot Instructions for Boundlexx Modernization
 
-## 📚 Documentation Structure - Industry Standard
+## � CRITICAL: STRICT DOCUMENTATION GOVERNANCE ENFORCEMENT
+
+**BEFORE ANY FILE CREATION OR MODIFICATION, ENFORCE THESE RULES:**
+
+### **Documentation Governance - NO EXCEPTIONS**
+- **FORBIDDEN**: Any `.md` files outside `docs/manual/` or `docs/modernization/`
+- **REQUIRED**: All user documentation MUST go in Master Manual hierarchy
+- **ENFORCEMENT**: Check file location before any documentation creation
+- **EXCEPTION**: Only `README.md`, `CHANGELOG.md`, `LICENSE` allowed in root
+
+### **Master Manual Hierarchy - STRICT COMPLIANCE**
+```
+docs/manual/
+├── getting-started/    # ONLY setup and installation guides
+├── workflows/          # ONLY daily development procedures
+├── architecture/       # ONLY system design and concepts
+├── migration/          # ONLY upgrade and modernization docs
+├── reference/          # ONLY commands, API, config, troubleshooting
+└── appendices/         # ONLY historical context and contributing
+```
+
+### **File Creation Rules - ZERO TOLERANCE FOR SPRAWL**
+| Type | Location | Examples | Action |
+|------|----------|----------|---------|
+| User Docs | `docs/manual/` | Guides, tutorials | ENFORCE hierarchy |
+| Tech Tracking | `docs/modernization/` | Research, migration | Minimal only |
+| Scripts | `scripts/utilities/` | One-off tools | No root pollution |
+| Config | `config/`, `.github/` | Settings | Proper subdirs |
+| Root Files | HIGHLY RESTRICTED | Standard project only | Require approval |
+
+### **AI Assistant Responsibilities**
+1. **VALIDATE** file location before creation
+2. **REDIRECT** documentation to Master Manual
+3. **PREVENT** root directory pollution
+4. **ENFORCE** governance standards automatically
+5. **EDUCATE** user about proper file placement
+
+## �📚 Documentation Structure - Industry Standard
 
 **Primary Reference: [Master Manual](../docs/manual/index.md)**
 

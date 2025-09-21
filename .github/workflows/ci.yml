@@ -49,6 +49,12 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
 
+      - name: Documentation Governance Check
+        run: |
+          echo "🔍 Checking documentation governance standards..."
+          python .github/governance/pre-commit-documentation-check.py
+          echo "✅ Documentation governance check passed"
+
       - name: Pull cached images
         run: |
           docker pull ${{ env.REGISTRY }}/angellusmortis/boundlexx-postgres:latest || true
