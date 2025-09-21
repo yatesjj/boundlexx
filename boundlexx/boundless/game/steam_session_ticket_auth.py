@@ -7,13 +7,13 @@ for game-to-backend server authentication with Django integration.
 Based on: https://partner.steamgames.com/doc/features/auth
 """
 
-import os
 import json
 import logging
-import requests
+import os
 from datetime import datetime, timedelta
-from typing import Optional, Dict, Any, Tuple
+from typing import Optional, Tuple
 
+import requests
 from django.conf import settings
 from steam.client import SteamClient
 from steam.enums import EResult
@@ -30,8 +30,8 @@ class SteamSessionTicketManager:
     def __init__(self, username: str, password: str):
         self.username = username
         self.password = password
-        self.session_file = f'/app/.steam/session_{username}.json'
-        self.logger = logging.getLogger(f'SteamTicketManager_{username}')
+        self.session_file = f"/app/.steam/session_{username}.json"
+        self.logger = logging.getLogger(f"SteamTicketManager_{username}")
 
         # Session state
         self.session_ticket: Optional[str] = None
@@ -51,11 +51,15 @@ class SteamSessionTicketManager:
         try:
             # Check if current session is valid
             if self._is_session_valid():
-                self.logger.info(f"Using existing valid session (expires: {self.ticket_expiry})")
+                self.logger.info(
+                    f"Using existing valid session (expires: {self.ticket_expiry})"
+                )
                 return self.session_ticket
 
             # Session expired or doesn't exist, need to refresh
-            self.logger.info("Session expired or missing, performing fresh authentication...")
+            self.logger.info(
+                "Session expired or missing, performing fresh authentication..."
+            )
 
             success, error = self._perform_authentication()
             if success:
@@ -79,16 +83,16 @@ class SteamSessionTicketManager:
             Tuple[bool, Optional[int]]: (is_valid, steam_id)
         """
         try:
-            api_key = getattr(settings, 'STEAM_WEB_API_KEY', None)
+            api_key = getattr(settings, "STEAM_WEB_API_KEY", None)
             if not api_key:
                 self.logger.error("STEAM_WEB_API_KEY not configured")
                 return False, None
 
             api_url = "https://partner.steam-api.com/ISteamUserAuth/AuthenticateUserTicket/v1/"
             request_data = {
-                'key': api_key,
-                'appid': 324510,  # Boundless AppID
-                'ticket': ticket
+                "key": api_key,
+                "appid": 324510,  # Boundless AppID
+                "ticket": ticket,
             }
 
             response = requests.post(api_url, data=request_data, timeout=30)
@@ -96,9 +100,11 @@ class SteamSessionTicketManager:
             if response.status_code == 200:
                 api_response = response.json()
 
-                if 'response' in api_response and 'params' in api_response['response']:
-                    steam_id = int(api_response['response']['params']['steamid'])
-                    self.logger.info(f"Ticket validation successful for Steam ID: {steam_id}")
+                if "response" in api_response and "params" in api_response["response"]:
+                    steam_id = int(api_response["response"]["params"]["steamid"])
+                    self.logger.info(
+                        f"Ticket validation successful for Steam ID: {steam_id}"
+                    )
                     return True, steam_id
                 else:
                     self.logger.error("Invalid API response format")
@@ -144,16 +150,20 @@ class SteamSessionTicketManager:
         """Load existing session from file if available"""
         try:
             if os.path.exists(self.session_file):
-                with open(self.session_file, 'r') as f:
+                with open(self.session_file, "r") as f:
                     session_data = json.load(f)
 
-                self.session_ticket = session_data.get('session_ticket')
-                self.steam_id = session_data.get('steam_id')
+                self.session_ticket = session_data.get("session_ticket")
+                self.steam_id = session_data.get("steam_id")
 
-                if session_data.get('ticket_expiry'):
-                    self.ticket_expiry = datetime.fromisoformat(session_data['ticket_expiry'])
+                if session_data.get("ticket_expiry"):
+                    self.ticket_expiry = datetime.fromisoformat(
+                        session_data["ticket_expiry"]
+                    )
 
-                self.logger.info(f"Loaded existing session (expires: {self.ticket_expiry})")
+                self.logger.info(
+                    f"Loaded existing session (expires: {self.ticket_expiry})"
+                )
             else:
                 self.logger.info("No existing session file found")
 
@@ -165,17 +175,19 @@ class SteamSessionTicketManager:
         """Save current session to file"""
         try:
             session_data = {
-                'username': self.username,
-                'steam_id': self.steam_id,
-                'session_ticket': self.session_ticket,
-                'ticket_expiry': self.ticket_expiry.isoformat() if self.ticket_expiry else None,
-                'created_at': datetime.utcnow().isoformat(),
-                'authentication_method': 'session_ticket_web_api'
+                "username": self.username,
+                "steam_id": self.steam_id,
+                "session_ticket": self.session_ticket,
+                "ticket_expiry": (
+                    self.ticket_expiry.isoformat() if self.ticket_expiry else None
+                ),
+                "created_at": datetime.utcnow().isoformat(),
+                "authentication_method": "session_ticket_web_api",
             }
 
             os.makedirs(os.path.dirname(self.session_file), exist_ok=True)
 
-            with open(self.session_file, 'w') as f:
+            with open(self.session_file, "w") as f:
                 json.dump(session_data, f, indent=2)
 
             self.logger.info(f"Session saved: {self.session_file}")
@@ -219,42 +231,56 @@ class SteamSessionTicketManager:
             # Generate app ownership ticket for Boundless (AppID 324510)
             # Try Encrypted Application Ticket first (21-day expiry) for maximum session duration
             try:
-                self.logger.info("Attempting to get Encrypted Application Ticket (21-day expiry)...")
+                self.logger.info(
+                    "Attempting to get Encrypted Application Ticket (21-day expiry)..."
+                )
 
                 # Use synchronous get_encrypted_app_ticket method (steam.py v1.4.4)
-                encrypted_ticket = client.get_encrypted_app_ticket(324510, b'')
+                encrypted_ticket = client.get_encrypted_app_ticket(324510, b"")
 
                 if encrypted_ticket:
                     # Convert encrypted ticket to hex format for Web API validation
                     # The encrypted ticket is a protobuf message with binary data
-                    if hasattr(encrypted_ticket, 'SerializeToString'):
+                    if hasattr(encrypted_ticket, "SerializeToString"):
                         self.session_ticket = encrypted_ticket.SerializeToString().hex()
                     else:
                         # If it's already bytes, convert directly
-                        self.session_ticket = encrypted_ticket.hex() if isinstance(encrypted_ticket, bytes) else str(encrypted_ticket)
+                        self.session_ticket = (
+                            encrypted_ticket.hex()
+                            if isinstance(encrypted_ticket, bytes)
+                            else str(encrypted_ticket)
+                        )
 
                     # Encrypted app tickets expire after 21 days per Steam documentation
                     self.ticket_expiry = datetime.utcnow() + timedelta(days=21)
-                    self.logger.info(f"✅ Encrypted app ticket obtained (21-day expiry: {self.ticket_expiry})")
+                    self.logger.info(
+                        f"✅ Encrypted app ticket obtained (21-day expiry: {self.ticket_expiry})"
+                    )
                 else:
                     raise Exception("Failed to retrieve encrypted app ticket")
 
             except Exception as e:
-                self.logger.warning(f"Encrypted app ticket failed ({e}), falling back to session ticket...")
+                self.logger.warning(
+                    f"Encrypted app ticket failed ({e}), falling back to session ticket..."
+                )
 
                 # Fallback to regular session ticket (24-hour expiry)
                 ticket_response = client.get_app_ticket(324510)
 
-                if not ticket_response or not hasattr(ticket_response, 'ticket'):
+                if not ticket_response or not hasattr(ticket_response, "ticket"):
                     return False, "Failed to generate any app ticket"
 
                 # Convert to hex format required by Web API
                 self.session_ticket = ticket_response.ticket.hex()
                 # Regular app tickets expire after 24 hours
                 self.ticket_expiry = datetime.utcnow() + timedelta(hours=24)
-                self.logger.info(f"⚠️  Using fallback session ticket (24-hour expiry: {self.ticket_expiry})")
+                self.logger.info(
+                    f"⚠️  Using fallback session ticket (24-hour expiry: {self.ticket_expiry})"
+                )
 
-            self.logger.info(f"Session ticket generated successfully (expires: {self.ticket_expiry})")
+            self.logger.info(
+                f"Session ticket generated successfully (expires: {self.ticket_expiry})"
+            )
 
             # Web API validation commented out - 21-day encrypted tickets work without it
             # if hasattr(settings, 'STEAM_WEB_API_KEY') and settings.STEAM_WEB_API_KEY:
@@ -283,7 +309,7 @@ class SteamSessionTicketManager:
             if client:
                 try:
                     client.logout()
-                except:
+                except Exception:
                     pass
 
 
@@ -335,12 +361,14 @@ def get_steam_authentication_for_boundless(username: str, password: str) -> str:
     Raises:
         Exception: If authentication fails
     """
-    auth_logger = logging.getLogger('BoundlessAuth')
+    auth_logger = logging.getLogger("BoundlessAuth")
     auth_logger.info(f"Getting Steam authentication for Boundless (user: {username})")
 
     try:
         # Try to get from global session manager first
-        from boundlexx.boundless.management.commands.prompt_steam_guard import get_global_steam_manager
+        from boundlexx.boundless.management.commands.prompt_steam_guard import (
+            get_global_steam_manager,
+        )
 
         session_mgr = get_global_steam_manager()
         existing_manager = session_mgr.get_manager(username)
@@ -351,12 +379,18 @@ def get_steam_authentication_for_boundless(username: str, password: str) -> str:
                 # Try to get fresh app ticket from existing session
                 ticket = existing_manager.get_app_ticket(324510)
                 if ticket:
-                    auth_logger.info(f"Successfully obtained app ticket from existing session")
+                    auth_logger.info(
+                        f"Successfully obtained app ticket from existing session"
+                    )
                     return ticket
                 else:
-                    auth_logger.warning(f"Failed to get app ticket from existing session, creating new session")
+                    auth_logger.warning(
+                        f"Failed to get app ticket from existing session, creating new session"
+                    )
             except Exception as e:
-                auth_logger.warning(f"Existing session failed: {e}, creating new session")
+                auth_logger.warning(
+                    f"Existing session failed: {e}, creating new session"
+                )
 
         # Create new session manager if needed
         auth_logger.info(f"Creating new authentication session for {username}")

@@ -17,9 +17,9 @@ Features:
 - Session management for BoundlessClient integration
 """
 
-import os
 import asyncio
 import logging
+import os
 from datetime import datetime, timedelta
 
 import djclick as click
@@ -27,7 +27,6 @@ from django.conf import settings
 from steam.client import SteamClient
 
 from boundlexx.boundless.game.steam_session_ticket_auth import SteamSessionTicketManager
-
 
 # Global session manager for reuse
 _global_session_manager = None
@@ -39,7 +38,7 @@ class GlobalSteamSessionManager:
     def __init__(self):
         self.managers = {}  # username -> SteamSessionTicketManager
         self.authenticated_users = set()
-        self.logger = logging.getLogger('GlobalSteamAuth')
+        self.logger = logging.getLogger("GlobalSteamAuth")
 
     async def authenticate_user(self, username, password):
         """Authenticate a user and store session for reuse"""
@@ -70,23 +69,23 @@ class GlobalSteamSessionManager:
         for manager in self.managers.values():
             try:
                 # Clear session files from disk
-                if hasattr(manager, '_clear_session'):
+                if hasattr(manager, "_clear_session"):
                     manager._clear_session()
                 # Logout Steam client
-                if hasattr(manager, 'client') and manager.client:
+                if hasattr(manager, "client") and manager.client:
                     manager.client.logout()
             except Exception as e:
                 self.logger.warning(f"Error clearing session: {e}")
 
         # Also clear any existing session files on disk (in case managers weren't loaded)
         try:
-            steam_dir = os.path.expanduser('~/.steam')
+            steam_dir = os.path.expanduser("~/.steam")
             if not os.path.exists(steam_dir):
-                steam_dir = '/app/.steam'  # Container environment
+                steam_dir = "/app/.steam"  # Container environment
 
             if os.path.exists(steam_dir):
                 for filename in os.listdir(steam_dir):
-                    if filename.startswith('session_') and filename.endswith('.json'):
+                    if filename.startswith("session_") and filename.endswith(".json"):
                         session_file = os.path.join(steam_dir, filename)
                         os.remove(session_file)
                         self.logger.info(f"Removed session file: {session_file}")
@@ -107,8 +106,14 @@ def get_global_steam_manager():
 
 
 @click.command()
-@click.option('--test-tickets', is_flag=True, help='Test app ticket generation after authentication')
-@click.option('--clear-session', is_flag=True, help='Clear existing authentication sessions')
+@click.option(
+    "--test-tickets",
+    is_flag=True,
+    help="Test app ticket generation after authentication",
+)
+@click.option(
+    "--clear-session", is_flag=True, help="Clear existing authentication sessions"
+)
 def command(test_tickets, clear_session):
     """
     Steam Authentication Manager
@@ -119,10 +124,9 @@ def command(test_tickets, clear_session):
 
     # Setup logging
     logging.basicConfig(
-        level=logging.INFO,
-        format='[%(asctime)s] %(name)s %(levelname)s: %(message)s'
+        level=logging.INFO, format="[%(asctime)s] %(name)s %(levelname)s: %(message)s"
     )
-    logger = logging.getLogger('SteamAuth')
+    logger = logging.getLogger("SteamAuth")
 
     click.echo("Steam Authentication Manager")
     click.echo("=" * 50)
@@ -137,14 +141,18 @@ def command(test_tickets, clear_session):
 
     # Validate configuration
     if not settings.STEAM_USERNAMES or not settings.STEAM_PASSWORDS:
-        click.echo("❌ STEAM_USERNAMES and STEAM_PASSWORDS must be configured in settings")
+        click.echo(
+            "❌ STEAM_USERNAMES and STEAM_PASSWORDS must be configured in settings"
+        )
         return
 
     if len(settings.STEAM_USERNAMES) != len(settings.STEAM_PASSWORDS):
         click.echo("❌ STEAM_USERNAMES and STEAM_PASSWORDS must have same length")
         return
 
-    click.echo(f"Found {len(settings.STEAM_USERNAMES)} Steam account(s) to authenticate")
+    click.echo(
+        f"Found {len(settings.STEAM_USERNAMES)} Steam account(s) to authenticate"
+    )
 
     # Authenticate each user
     for index, username in enumerate(settings.STEAM_USERNAMES):
@@ -170,8 +178,10 @@ def command(test_tickets, clear_session):
                     click.echo(f"   Session ticket length: {len(ticket)} characters")
 
                     # Show ticket expiry if available
-                    if hasattr(manager, 'session_expires') and manager.session_expires:
-                        expiry_str = manager.session_expires.strftime('%Y-%m-%d %H:%M:%S')
+                    if hasattr(manager, "session_expires") and manager.session_expires:
+                        expiry_str = manager.session_expires.strftime(
+                            "%Y-%m-%d %H:%M:%S"
+                        )
                         click.echo(f"   Ticket expires: {expiry_str}")
                 else:
                     click.echo(f"❌ Authentication failed for {username}")
@@ -230,8 +240,9 @@ def command(test_tickets, clear_session):
         for username in session_mgr.authenticated_users:
             if username in session_mgr.managers:
                 manager = session_mgr.managers[username]
-                if hasattr(manager, 'ticket_expiry') and manager.ticket_expiry:
+                if hasattr(manager, "ticket_expiry") and manager.ticket_expiry:
                     from datetime import datetime
+
                     time_remaining = manager.ticket_expiry - datetime.utcnow()
                     if time_remaining.days >= 14:
                         session_expires.append(f"~{time_remaining.days} days")
@@ -243,8 +254,12 @@ def command(test_tickets, clear_session):
 
         if session_expires:
             # Show the longest session duration
-            longest_session = max(session_expires, key=lambda x: int(x.split()[0].replace('~', '')))
-            click.echo(f"   - Sessions expire in {longest_session} (encrypted app tickets)")
+            longest_session = max(
+                session_expires, key=lambda x: int(x.split()[0].replace("~", ""))
+            )
+            click.echo(
+                f"   - Sessions expire in {longest_session} (encrypted app tickets)"
+            )
         else:
             click.echo("   - Session expiry information not available")
     else:
