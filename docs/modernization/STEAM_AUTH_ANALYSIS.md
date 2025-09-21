@@ -16,7 +16,7 @@ def _get_session_ticket(self) -> Optional[bytes]:
     try:
         # Use get_app_ticket() method - returns protobuf response
         response = self.client.get_app_ticket(self.app_id)
-        
+
         if response and hasattr(response, 'ticket'):
             ticket_data = response.ticket
             logger.info(f"Got app ticket: {len(ticket_data)} bytes")
@@ -42,7 +42,7 @@ def _get_session_ticket(self) -> Optional[bytes]:
 **Source**: https://partner.steamgames.com/doc/features/auth
 
 **Key Methods:**
-- `GetAuthSessionTicket()` → P2P/game servers  
+- `GetAuthSessionTicket()` → P2P/game servers
 - `GetAuthTicketForWebApi()` → Backend servers (ideal but may not be available in steam[client])
 - `get_app_ticket()` → What we're using successfully
 
@@ -55,7 +55,7 @@ def _get_session_ticket(self) -> Optional[bytes]:
 
 **Authenticated APIs (Require Blessed Keys):**
 - HTTP Shopping API
-- Beacons API  
+- Beacons API
 - LOD0 Map API
 
 **Critical Discovery**: World discovery can be done via public endpoints, individual world APIs may need blessed keys.
@@ -74,7 +74,7 @@ def _get_session_ticket(self) -> Optional[bytes]:
 
 **Working Authentication Flow:**
 ```
-Credentials → SteamClient.login() → 2FA via cli_login() → 
+Credentials → SteamClient.login() → 2FA via cli_login() →
 get_app_ticket(324510) → protobuf.ticket → hex() → Success
 ```
 
@@ -178,6 +178,119 @@ Based on the analysis, we should use the `steam[client]` library approach becaus
 ✅ Ticket preview: 32000000040000006be2e30001001001...
 ✅ Steam authentication is fully functional!
 ```
+
+## 🔄 Steam Authentication in Normal Application Flow
+
+### **Architecture Overview**
+```
+Celery Background Tasks → BoundlessClient → Steam Authentication → Boundless Discovery Server
+```
+
+### **Automatic Operation Chain**
+
+**1. Scheduled Background Tasks**
+Celery automatically runs these tasks for world discovery and data updates:
+- `discover_worlds` - Scans for new world IDs
+- `poll_perm_worlds` - Updates permanent world data  
+- `poll_exo_worlds` - Updates exoworld data
+- `poll_sovereign_worlds` - Updates player-owned worlds
+- `poll_creative_worlds` - Updates creative worlds
+
+**2. BoundlessClient Initialization**
+```python
+# Each task creates a client instance
+client = BoundlessClient()
+# Client automatically selects Steam account (round-robin rotation)
+# Accounts configured in .local.env: STEAM_USERNAMES, STEAM_PASSWORDS
+```
+
+**3. Authentication Chain (Completely Automatic)**
+```python
+# Authentication triggers on first API call via lazy loading:
+query_token = client.query_token  # This triggers the auth chain
+
+# Dual authentication to Boundless Discovery Server /login:
+data = {
+    "authToken": self._get_game_jwt(boundless_user, boundless_pass),        # Boundless account JWT
+    "steamTicket": self._get_steam_session_ticket(steam_user, steam_pass),  # Our Steam ticket!
+    "vcplatform": 1,
+}
+```
+
+**4. Steam Session Ticket Generation (Our Implementation)**
+```python
+# _get_steam_session_ticket() calls our steam_auth_pure_python.py:
+# 1. Login to Steam with credentials from .local.env
+# 2. Handle Steam Guard 2FA (using cached sentry files from .steam/)
+# 3. Call client.get_app_ticket(324510) for Boundless app
+# 4. Extract response.ticket and convert to hex
+# 5. Return 356-character hex session ticket
+```
+
+**5. Query Token Caching & Usage**
+```python
+# Successful authentication returns queryToken from Discovery Server
+# Token cached for 12 hours (43200 seconds)
+# All subsequent API calls use this cached token:
+worlds = client.get_world_data(SimpleWorld(world_id, None))
+poll_data = client.get_world_poll(world, poll_token)
+```
+
+### **Production Deployment Requirements**
+
+**Environment Variables (Required):**
+```bash
+BOUNDLESS_DS_REQUIRES_AUTH=True
+STEAM_USERNAMES=steam_user1,steam_user2,steam_user3
+STEAM_PASSWORDS=steam_pass1,steam_pass2,steam_pass3  
+BOUNDLESS_USERNAMES=boundless_user1,boundless_user2,boundless_user3
+BOUNDLESS_PASSWORDS=boundless_pass1,boundless_pass2,boundless_pass3
+```
+
+**File System Requirements:**
+- `.steam/` directory must be writable for sentry file storage
+- Sentry files must persist between container restarts
+- Multiple Steam accounts for load distribution and rate limiting
+
+**One-time Steam Guard Setup:**
+```bash
+python manage.py prompt_steam_guard
+# Interactive 2FA setup for each Steam account
+# Creates persistent sentry files in .steam/ directory
+# After this, authentication is completely automatic
+```
+
+### **Error Handling & Resilience**
+
+**Authentication Failures:**
+- Invalid Steam credentials → Exception raised, task fails
+- Expired sentry files → Falls back to interactive 2FA prompts
+- Discovery server errors → Retries with exponential backoff
+- Rate limiting → Multiple Steam accounts help distribute load
+
+**Monitoring & Logging:**
+- All authentication attempts logged with success/failure status
+- Steam Guard prompts logged when sentry files need refresh  
+- Query token cache hits/misses tracked for performance monitoring
+
+### **Why This Architecture Works**
+
+**Automated Background Processing:**
+- No manual intervention required for normal operation
+- Steam authentication happens seamlessly during scheduled tasks
+- World discovery and data updates run continuously
+
+**Load Distribution:**
+- Multiple Steam accounts prevent individual account rate limiting
+- Round-robin rotation spreads API calls across accounts
+- Query token caching reduces authentication overhead
+
+**Fault Tolerance:**
+- Cached sentry files eliminate 2FA prompts during normal operation
+- Graceful fallback to interactive 2FA when sentry files expire
+- Task retry mechanisms handle temporary Steam/Discovery server issues
+
+**The key insight:** Steam authentication is **completely transparent** to the application. The world discovery system, shop data polling, and all Boundless API interactions work seamlessly because our Steam authentication provides the required session tickets automatically in the background.
 
 ### Key Lessons Learned:
 1. **Library Investigation Required**: Don't assume method names, investigate actual API

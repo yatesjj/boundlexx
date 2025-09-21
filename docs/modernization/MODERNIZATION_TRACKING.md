@@ -49,6 +49,13 @@ This document tracks all technical changes, findings, and decisions made during 
   - Organized all documentation in proper modernization docs location
   - Updated copilot instructions with working implementation details
   - Steam authentication now production-ready for Boundless Discovery Server integration
+- **Normal Operation Workflow Documented:**
+  - **Automatic Background Tasks**: Celery tasks (discover_worlds, poll_*_worlds) trigger authentication
+  - **Multi-Account Rotation**: Round-robin through Steam accounts to prevent rate limiting
+  - **Query Token Caching**: 12-hour cache prevents repeated authentication
+  - **2FA Automation**: Cached sentry files eliminate manual Steam Guard prompts
+  - **Error Resilience**: Graceful fallback to interactive 2FA when sentry files expire
+  - **Production Ready**: Complete environment configuration documented for deployment
 - **Ready for Next Phase:** Steam authentication foundation complete for world discovery and data population tasks
 - **How to Roll Back:** Previous implementation can be restored from git history, but current implementation is working and should be maintained
 

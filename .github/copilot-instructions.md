@@ -134,7 +134,37 @@ python manage.py create_game_objects --colors  # For color group processing
 - **Output**: 356-character hex session ticket for API authentication
 - **2FA**: Interactive Steam Guard support via `cli_login()`
 
-**Testing Verified**: Full authentication chain working with real Steam credentials and 2FA prompts.
+**Normal Operation Flow (Automatic):**
+```python
+# Celery Background Tasks → BoundlessClient → Steam Authentication → Boundless Discovery Server
+
+# 1. Scheduled tasks (discover_worlds, poll_*_worlds) create BoundlessClient()
+# 2. Client rotates through multiple Steam accounts (round-robin)
+# 3. Authentication chain triggers on first API call:
+query_token = client.query_token  # Lazy loading triggers auth
+
+# 4. Dual authentication to Boundless Discovery Server:
+data = {
+    "authToken": self._get_game_jwt(boundless_user, boundless_pass),        # Boundless JWT
+    "steamTicket": self._get_steam_session_ticket(steam_user, steam_pass),  # Steam ticket
+    "vcplatform": 1,
+}
+
+# 5. Query token cached for 12 hours, used for all subsequent API calls
+```
+
+**Steam Guard 2FA Setup (One-time):**
+```bash
+python manage.py prompt_steam_guard  # Interactive setup, stores sentry files in .steam/
+```
+
+**Production Requirements:**
+- Multiple Steam accounts for load distribution
+- Persistent `.steam/` directory for sentry files
+- Environment variables: `STEAM_USERNAMES`, `STEAM_PASSWORDS`, `BOUNDLESS_USERNAMES`, `BOUNDLESS_PASSWORDS`
+- Setting: `BOUNDLESS_DS_REQUIRES_AUTH=True`
+
+**Testing Verified**: Full authentication chain working with real Steam credentials, automatic 2FA, and live world discovery tasks.
 
 ## Modernization & Migration Plan (2025) - FORWARD-LOOKING
 
