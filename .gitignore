@@ -290,3 +290,6 @@ boundlexx/media/
 .ipython/
 .envs/*
 !.envs/.local/
+
+# Chat/conversation logs
+chat.json
