@@ -6,8 +6,11 @@ docker-compose.override.yml
 .local.env
 .testing.env
 .live.env
+
+# Steam authentication files (NEVER commit these - contain session tickets)
 .steam/*
 !.steam/.gitkeep
+.steam/session_*.json
 
 # Test environments (parallel testing directories)
 *-test/

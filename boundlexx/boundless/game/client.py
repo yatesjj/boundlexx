@@ -254,29 +254,37 @@ class BoundlessClient:
         return response.json()["data"]
 
     def _get_steam_session_ticket(self, username, password):
-        """Get Steam session ticket using pure Python approach"""
-        # Pure Python approach only (Node.js fallback disabled)
+        """
+        Get Steam session ticket using official Session Ticket + Web API pattern
+
+        Implements the official Steamworks authentication pattern:
+        https://partner.steamgames.com/doc/features/auth
+        """
         try:
-            from boundlexx.boundless.game.steam_auth_pure_python import (
-                get_steam_session_ticket_pure_python,
+            from boundlexx.boundless.game.steam_session_ticket_auth import (
+                get_steam_authentication_for_boundless,
             )
 
-            logger.info("Using pure Python Steam authentication...")
-            ticket = get_steam_session_ticket_pure_python(username, password)
+            logger.info("Using official Steamworks Session Ticket + Web API authentication...")
+
+            # Get session ticket using the official pattern
+            ticket = get_steam_authentication_for_boundless(username, password)
 
             if ticket:
-                logger.info("✅ Pure Python Steam authentication successful!")
+                logger.info("✅ Official Steamworks Session Ticket authentication successful!")
+                logger.info(f"Session ticket length: {len(ticket)} characters")
+                logger.info(f"Session ticket preview: {ticket[:40]}...")
                 return ticket
             else:
-                logger.error("❌ Pure Python Steam authentication failed!")
-                raise Exception(
-                    "Pure Python Steam authentication failed - Node.js fallback disabled"
-                )
+                logger.error("❌ Official Steamworks Session Ticket authentication failed!")
+                raise Exception("Official Steamworks Session Ticket authentication failed")
+
         except ImportError as e:
-            logger.error(f"Pure Python Steam auth not available: {e}")
-            raise Exception("Pure Python Steam auth module not found")
+            logger.error(f"Official Steamworks Session Ticket auth module not available: {e}")
+            raise Exception("Official Steamworks Session Ticket auth module not found")
         except Exception as e:
-            logger.error(f"Pure Python Steam auth failed: {e}")
+            logger.error(f"Official Steamworks Session Ticket authentication failed: {e}")
+            logger.exception("Full exception details:")
             raise
 
     def _authentiated_post(

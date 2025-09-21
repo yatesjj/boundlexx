@@ -120,57 +120,87 @@ python manage.py create_game_objects --colors  # For color group processing
 4. openpyxl compatibility fixes are preserved and functional
 5. English-only setup provides 80% faster development iterations (2,190 vs 10,964 LocalizedString objects)
 
-#### ✅ Steam Authentication Implementation WORKING (September 2025)
-**Status**: Production-ready Steam authentication with Python 3.12 compatibility
-- **File**: `boundlexx/boundless/game/steam_auth_pure_python.py`
-- **Dependencies**: `steam[client]==1.4.4` (properly compiled in requirements)
-- **Integration**: BoundlessClient compatible via `get_steam_session_ticket_pure_python()`
-- **Features**: 2FA support, credential persistence, proper error handling
-- **Configuration**: Uses `.local.env` credentials (STEAM_USERNAMES, STEAM_PASSWORDS)
+#### Steam Authentication Implementation - 21-Day Encrypted Tickets (PRODUCTION READY)
+**Reference Documentation**:
+- [Steam.py v1.4.4 Official API Documentation](https://steam-py.github.io/docs/latest/api/)
+- [Steamworks User Authentication and Ownership](https://partner.steamgames.com/doc/features/auth)
 
-**Working Implementation Details:**
-- **Method**: `client.get_app_ticket(324510)` for Boundless app authentication
-- **Response**: Protobuf object with `.ticket` field containing session data
-- **Output**: 356-character hex session ticket for API authentication
-- **2FA**: Interactive Steam Guard support via `cli_login()`
+**VERIFIED WORKING IMPLEMENTATION (September 2025)**: 21-day encrypted app tickets using `steam.client.SteamClient.get_encrypted_app_ticket()` method - reduces 2FA prompts by 95% (from daily to every 3 weeks).
 
-**Normal Operation Flow (Automatic):**
+**Core Implementation Files**:
+- **`boundlexx/boundless/management/commands/prompt_steam_guard.py`** - User-facing authentication command
+- **`boundlexx/boundless/game/steam_session_ticket_auth.py`** - Core authentication module
+
+**Steam.py v1.4.4 API (CORRECT METHODS):**
+- **Library**: `steam[client]==1.4.4` - Official Python Steam client library
+- **Client Class**: `steam.client.SteamClient` - Primary interface (NOT `steam.Client`)
+- **Authentication**: `client.cli_login(username, password)` - Interactive 2FA authentication
+- **21-Day Tickets**: `client.get_encrypted_app_ticket(app_id, userdata)` - Encrypted app tickets (21-day expiry)
+- **24-Hour Fallback**: `client.get_app_ticket(app_id)` - Standard app tickets (24-hour expiry)
+
+**CRITICAL: Sentry Files Are Obsolete (2023)**
+- **DO NOT use sentry files** - Steam deprecated machine authentication server-side in 2023
+- **DO NOT call `set_credential_location()`** - no longer functional for persistent authentication
+- **DO NOT expect `ClientUpdateMachineAuth` events** - Steam servers no longer send these
+
+**Proven 21-Day Authentication Workflow:**
 ```python
-# Celery Background Tasks → BoundlessClient → Steam Authentication → Boundless Discovery Server
+from steam.client import SteamClient
 
-# 1. Scheduled tasks (discover_worlds, poll_*_worlds) create BoundlessClient()
-# 2. Client rotates through multiple Steam accounts (round-robin)
-# 3. Authentication chain triggers on first API call:
-query_token = client.query_token  # Lazy loading triggers auth
+# 1. Initialize Steam client (no sentry setup)
+client = SteamClient()
 
-# 4. Dual authentication to Boundless Discovery Server:
-data = {
-    "authToken": self._get_game_jwt(boundless_user, boundless_pass),        # Boundless JWT
-    "steamTicket": self._get_steam_session_ticket(steam_user, steam_pass),  # Steam ticket
-    "vcplatform": 1,
-}
+# 2. Interactive login with 2FA handling
+result = client.cli_login(username, password)
 
-# 5. Query token cached for 12 hours, used for all subsequent API calls
+# 3. Get 21-day encrypted app ticket for Boundless (AppID 324510)
+encrypted_ticket = client.get_encrypted_app_ticket(324510, b'')
+
+# 4. Convert to hex format for use
+if hasattr(encrypted_ticket, 'SerializeToString'):
+    ticket_hex = encrypted_ticket.SerializeToString().hex()
+else:
+    ticket_hex = encrypted_ticket.hex()
+
+# 5. Ticket valid for 21 days - massive 2FA reduction!
 ```
 
-**Steam Guard 2FA Setup (One-time):**
+**Usage - Management Command:**
 ```bash
-python manage.py prompt_steam_guard  # Interactive setup, stores sentry files in .steam/
+# Authenticate once every 21 days
+python manage.py prompt_steam_guard
+
+# Test existing session (no 2FA needed for 21 days)
+python manage.py prompt_steam_guard --test-tickets
+
+# Clear sessions to force fresh authentication
+python manage.py prompt_steam_guard --clear-session
 ```
 
-**Production Requirements:**
-- Multiple Steam accounts for load distribution
-- Persistent `.steam/` directory for sentry files
-- Environment variables: `STEAM_USERNAMES`, `STEAM_PASSWORDS`, `BOUNDLESS_USERNAMES`, `BOUNDLESS_PASSWORDS`
-- Setting: `BOUNDLESS_DS_REQUIRES_AUTH=True`
+**Session Duration Benefits:**
+- **21-Day Encrypted Tickets**: Optimal user experience, minimal 2FA interruption
+- **24-Hour Fallback**: Used only if encrypted tickets fail
+- **2FA Reduction**: 95% fewer prompts (21 days vs 24 hours)
+- **Session Persistence**: Cached in `/app/.steam/session_*.json` files
 
-**Token Validity & Expiration:**
-- **Query Token**: 12 hours (43200 seconds) - automatically renewed
-- **Steam Session Tickets**: Single-use only - fresh generation for each auth
-- **Steam Sentry Files**: Indefinite until Steam invalidates (typically weeks/months)
-- **Manual 2FA**: Only required when sentry files expire (`python manage.py prompt_steam_guard`)
+**Environment Configuration:**
+- **Required**: `STEAM_USERNAMES`, `STEAM_PASSWORDS` (comma-separated for multiple accounts)
+- **Optional**: `STEAM_WEB_API_KEY` (for server-side validation - not required for 21-day tickets)
+- **Integration**: Works with `BOUNDLESS_USERNAMES`, `BOUNDLESS_PASSWORDS` for Discovery Server
 
-**Testing Verified**: Full authentication chain working with real Steam credentials, automatic 2FA, and live world discovery tasks.
+**BoundlessClient Integration:**
+```python
+# Integration pattern in boundlexx/boundless/game/client.py
+def _get_steam_session_ticket(self, username, password):
+    from boundlexx.boundless.game.steam_session_ticket_auth import get_steam_authentication_for_boundless
+    return get_steam_authentication_for_boundless(username, password)
+```
+
+**Production Notes:**
+- **Session Files**: Stored in `/app/.steam/` directory with automatic cleanup
+- **Error Handling**: Graceful fallback from 21-day to 24-hour tickets
+- **Rate Limiting**: Built-in Steam authentication rate limiting protection
+- **Security**: Credentials managed via environment variables, session files contain only tickets
 
 ## Modernization & Migration Plan (2025) - FORWARD-LOOKING
 

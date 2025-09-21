@@ -857,10 +857,8 @@ API_PROTOCOL = env("API_PROTOCOL", default="http")
 
 STEAM_USERNAMES = env.list("STEAM_USERNAMES", default=[])
 STEAM_PASSWORDS = env.list("STEAM_PASSWORDS", default=[])
-STEAM_SENTRY_DIR = "/app/.steam"
-STEAM_APP_ID = 324510
-STEAM_AUTH_SCRIPT = "/usr/local/bin/steam-auth-ticket"
-STEAM_AUTH_NODE_MODULES = "/usr/local/lib/node_modules"
+STEAM_WEB_API_KEY = env("STEAM_WEB_API_KEY", default=None)
+STEAM_APP_ID = 324510  # Boundless AppID
 
 ADMIN_DOMAIN_REPLACEMENTS = {
     "boundlexx.app": "boundlexx.wl.mort.is",
