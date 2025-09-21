@@ -56,7 +56,7 @@ jobs:
           docker pull ${{ env.REGISTRY }}/angellusmortis/boundlexx-django-dev:latest || true
 
       - name: Build CI images
-        run: docker compose build postgres test lint
+        run: docker compose build boundlexx-postgres boundlexx-test boundlexx-lint
 
       - name: Cache dev Django image
         run: |
@@ -64,10 +64,10 @@ jobs:
           docker push ${{ env.REGISTRY }}/angellusmortis/boundlexx-django-dev:latest || true
 
       - name: Run linters
-        run: docker compose run --rm lint
+        run: docker compose run --rm boundlexx-lint
 
       - name: Run tests
-        run: docker compose run --rm test
+        run: docker compose run --rm boundlexx-test
 
   # Build and push production images
   build-and-push:
