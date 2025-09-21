@@ -52,10 +52,28 @@ Welcome to the comprehensive manual for the Boundlexx project - a Django-based A
 
 ## 🔧 How to Use This Manual
 
+### 📖 Navigation Strategies
 - **Linear Reading**: Start with Getting Started for comprehensive understanding
 - **Task-Oriented**: Jump to Workflows for specific operations
 - **Reference**: Use Reference section for quick lookups
 - **Troubleshooting**: Check Reference/Troubleshooting for common issues
+
+### 🚀 Quick Start Paths by Role
+
+#### New Developers
+1. **[Quick Start Guide](getting-started/quick-start.md)** - Get running in 5 minutes
+2. **[Complete Installation](getting-started/installation.md)** - Detailed setup for all scenarios
+3. **[Development Workflows](workflows/development.md)** - Daily tasks and VS Code integration
+
+#### System Administrators
+1. **[Architecture Overview](architecture/overview.md)** - System design and components
+2. **[Configuration Reference](reference/configuration.md)** - Environment variables and settings
+3. **[Troubleshooting Guide](reference/troubleshooting.md)** - Diagnostic procedures
+
+#### API Users
+1. **[API Reference](reference/api.md)** - Complete REST API documentation
+2. **[Authentication Guide](architecture/security.md)** - API security and tokens
+3. **[Examples & Integration](workflows/integration.md)** - Real-world usage patterns
 
 ## 📝 Contributing to Documentation
 
