@@ -1,3 +1,4 @@
+import io
 import socket
 from datetime import timedelta
 from email.utils import parsedate_to_datetime
@@ -14,7 +15,6 @@ from django.db.models import Q
 from django.utils import timezone
 from django_celery_beat.models import IntervalSchedule, PeriodicTask
 from openpyxl import Workbook
-from openpyxl.writer.excel import save_virtual_workbook
 from requests.exceptions import ReadTimeout
 
 from boundlexx.api.utils import (
@@ -53,6 +53,14 @@ COLOR_EXPORT_DESCRIPTION = """Export for all known block colors in the known uni
 """
 
 logger = get_task_logger(__name__)
+
+
+def save_virtual_workbook(workbook):
+    """Replacement for deprecated openpyxl save_virtual_workbook function"""
+    virtual_workbook = io.BytesIO()
+    workbook.save(virtual_workbook)
+    virtual_workbook.seek(0)
+    return virtual_workbook.getvalue()
 
 
 def _path_chunks(iterable, chunk_size):
