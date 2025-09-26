@@ -65,38 +65,67 @@ This fork is undergoing modernization, including a switch to GitHub Container Re
 
 **Quick Start for Development:**
 
-1. Clone the repo into a meaningful folder structure:
+📖 **For complete setup instructions, see** `SETUP_GUIDE.md`
+
+**Minimal Setup Steps:**
+
+1. **Environment Setup:**
 
    .. code-block:: bash
 
-      # Example: C:\VSCode\boundlexx-yatesjj\boundlexx\
-   # The current folder name (boundlexx-yatesjj) will be used for container prefixes
+      # Create virtual environment (recommended)
+      python -m venv .venv
+      .\.venv\Scripts\Activate.ps1
 
-2. **Create local environment files:**
-
-   .. code-block:: bash
-
-      # Copy template files to create your local versions
-      cp .env .local.env
-      cp docker-compose.override.example.yml docker-compose.override.yml
-
-3. **Set up your environment with unified container script:**
-
-   .. code-block:: bash
-
-      # For development environment (Django on port 28000)
+      # Setup container configuration  
       python setup_containers.py --env dev
 
-      # For test environment (Django on port 28001)
-      python setup_containers.py --env test
+2. **Start Services:**
 
-      # Interactive mode (prompts for environment choice)
-      python setup_containers.py
+   .. code-block:: bash
 
-4. **Customize your local environment:**
+      # Start all containers
+      docker-compose up -d
 
-   * Edit `docker-compose.override.yml` and update the path to your local Boundless install
-   * Edit `.local.env` for any personal environment variables
+      # Verify services are running
+      docker-compose ps
+
+3. **Initialize Database:**
+
+   .. code-block:: bash
+
+      # Apply migrations
+      docker-compose exec django python manage.py migrate
+
+      # Ingest game data (4,209 files)
+      docker-compose exec django python manage.py ingest_game_data 249.4.0
+
+4. **Create Game Objects:**
+
+   .. code-block:: bash
+
+      # Core data (items, metals, colors, localization)
+      docker-compose exec django python manage.py create_game_objects --core
+
+      # CRITICAL: Create blocks & liquids (required for resources)
+      docker-compose exec django python manage.py create_game_objects --item
+
+      # Game content (skills, recipes, emojis)
+      docker-compose exec django python manage.py create_game_objects --skill
+      docker-compose exec django python manage.py create_game_objects --recipe
+      docker-compose exec django python manage.py create_game_objects --emoji
+
+5. **Verify Setup:**
+
+   * **API**: http://localhost:28000/api/v2/
+   * **Admin**: http://localhost:28000/admin/ (create superuser first)
+
+**Alternative: Use VS Code Tasks**
+
+The project includes pre-configured tasks for automated setup:
+
+* **"Boundlexx: Fast Complete Setup"**: Full English-only setup
+* **"Boundlexx: Complete Setup"**: Full all-languages setup
 
 5. **Open in VS Code:**
 
