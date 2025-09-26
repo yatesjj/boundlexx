@@ -105,6 +105,22 @@ This fork is undergoing modernization, including a switch to GitHub Container Re
    * You should be prompted to "Reopen in Container". If not, run "Remote-Containers: Reopen in Container" from Command Palette (`Ctrl+Shift+P`)
    * VS Code will build the Docker images and start them up
 
+**Container Architecture:**
+
+The project uses a multi-service architecture with these containers:
+
+* **Infrastructure Services**: `postgres` (database), `redis` (cache/messaging) 
+* **Main Application**: `django` (web server on port 28000/28001)
+* **Background Processing**: `celery` (async tasks), `celerybeat` (scheduled tasks), `huey-consumer`, `huey-scheduler`
+* **Utility Services**: `manage` (Django commands), `test`, `lint`, `format`
+
+**Service Dependencies:**
+
+* Django depends on: postgres, redis
+* Celery services depend on: postgres, redis  
+* Huey services depend on: redis
+* All dependencies are managed automatically by Docker Compose
+
 **Verification:**
 
 Verify your containers are properly named:
@@ -113,11 +129,56 @@ Verify your containers are properly named:
 
    docker ps --format "table {{.Names}}\t{{.Image}}\t{{.Ports}}"
 
-Expected output: `boundlexx-yatesjj-django-1`, `boundlexx-yatesjj-postgres-1`, etc.
+Expected output for dev: `django-1`, `postgres-1`, `redis-1`, `celery-1`, etc.
+Expected output for test: `test-django-1`, `test-postgres-1`, `test-redis-1`, etc.
+
+Use the container status script for detailed analysis:
+
+.. code-block:: bash
+
+   python container_status.py
+
+**Docker Container Startup**
+
+After setting up your environment configuration, start the containers:
+
+.. code-block:: bash
+
+   # Start all services (recommended - includes dependency management)
+   docker-compose up -d
+
+   # Or start services individually in order:
+   # 1. Infrastructure services first
+   docker-compose up -d postgres redis
+   
+   # 2. Main application
+   docker-compose up -d django
+   
+   # 3. Background processing services
+   docker-compose up -d celery celerybeat huey-consumer huey-scheduler
+
+**Verify Container Status:**
+
+.. code-block:: bash
+
+   # Check all container status
+   docker-compose ps
+   
+   # View logs for main application
+   docker-compose logs -f django
+   
+   # Check container naming and ports
+   python container_status.py
+
+**Service Health Verification:**
+
+* **Django Web App**: http://localhost:28000 (or 28001 for test environment)
+* **Database**: Automatic connection testing and migrations run on Django startup
+* **Background Services**: Check logs for proper worker startup messages
 
 **Next Steps: Manual/Task-Based Setup**
 
-After the container is set up, you must perform the following steps inside the container or using VS Code tasks:
+After the containers are running, you must perform the following steps inside the container or using VS Code tasks:
 
 1. **Install Python requirements (if not already installed by the container):**
    - Use the "Boundlexx: Install Requirements" task or run `pip install -r requirements/dev.txt` inside the container.
@@ -171,6 +232,61 @@ If you encounter a KeyError or missing data error during this step (e.g., `Skill
       python manage.py runserver 0.0.0.0:28000
 
 After these steps, your Boundlexx instance should be ready for use and development. To log in as an admin, visit http://127.0.0.1:28000/admin/ and use the credentials you created.
+
+Startup Troubleshooting
+-----------------------
+
+**Common Issues and Solutions:**
+
+**Port Conflicts:**
+
+.. code-block:: bash
+
+   # Check if port 28000 is in use
+   netstat -ano | findstr :28000
+   
+   # If needed, modify port in docker-compose.override.yml
+
+**Database Connection Issues:**
+
+.. code-block:: bash
+
+   # Check if PostgreSQL container is healthy
+   docker-compose logs postgres
+   
+   # Verify database connection from Django container
+   docker-compose exec django python manage.py dbshell
+
+**Container Dependencies:**
+
+.. code-block:: bash
+
+   # Restart services in proper order if needed
+   docker-compose down
+   docker-compose up -d postgres redis
+   docker-compose up -d django
+   docker-compose up -d celery celerybeat huey-consumer huey-scheduler
+
+**Service Status Verification:**
+
+.. code-block:: bash
+
+   # Check all service health
+   docker-compose ps
+   
+   # View specific service logs
+   docker-compose logs [service-name]
+   
+   # Execute commands in running containers
+   docker-compose exec django python manage.py [command]
+
+**Automated Health Checks:**
+
+The Django container includes built-in health checks:
+
+* **PostgreSQL Readiness**: Waits for database connection before starting
+* **Database Migrations**: Runs automatically on Django container startup  
+* **Error Recovery**: Django development server restarts on Python syntax errors
 
 Container Management Scripts
 ----------------------------
