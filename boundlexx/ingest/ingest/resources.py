@@ -39,7 +39,13 @@ def _get_liquid(game_id):
 def _create_world_types(resource_data, created, data):
     world_types = []
 
-    for world_type in resource_data["bestType"]["types"]:
+    # Handle both old "bestType" and new "bestWorld" field names
+    best_data = (
+        resource_data.get("bestType")
+        or resource_data.get("bestWorld", {})
+    )
+    
+    for world_type in best_data.get("types", []):
         world_types.append(world_type.replace("_EXO", ""))
 
     if not created:
@@ -82,8 +88,19 @@ def run(**kwargs):
 
     data_created = 0
     click.echo("Creating Resource Data...")
-    # 0 = Live universe, 1 = Multiverse?
-    with click.progressbar(resourcetiers[0].items()) as pbar:
+    # Handle both old array format and new flat dictionary format
+    resources_data = resourcetiers
+    if isinstance(resourcetiers, list) and len(resourcetiers) > 0:
+        # Old format: array with index 0
+        resources_data = resourcetiers[0]
+    elif isinstance(resourcetiers, dict):
+        # New format: flat dictionary (game version 249.4.0+)
+        resources_data = resourcetiers
+    else:
+        click.echo("Error: Unexpected resourcetiers format")
+        return
+    
+    with click.progressbar(resources_data.items()) as pbar:
         for block_name, resource_data in pbar:
             block = Block.objects.select_related("block_item").get(name=block_name)
 
@@ -103,13 +120,19 @@ def run(**kwargs):
                 block.block_item.is_resource = True
                 block.block_item.save()
 
+            # Handle both old "bestType" and new "bestWorld" field names
+            best_data = (
+                resource_data.get("bestType")
+                or resource_data.get("bestWorld", {})
+            )
+            
             args = {
                 "is_embedded": is_embedded,
                 "exo_only": resource_data.get("exoOnly", False),
                 "max_tier": resource_data["maxTier"],
                 "min_tier": resource_data["minTier"],
-                "best_max_tier": resource_data["bestType"]["maxTier"],
-                "best_min_tier": resource_data["bestType"]["minTier"],
+                "best_max_tier": best_data.get("maxTier", resource_data["maxTier"]),
+                "best_min_tier": best_data.get("minTier", resource_data["minTier"]),
                 "shape": resource_profile["shape"],
                 "size_max": resource_profile["sizeMax"],
                 "size_min": resource_profile["sizeMin"],

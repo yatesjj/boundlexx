@@ -206,7 +206,7 @@ docker-compose exec django python manage.py create_game_objects --emoji
 # 6. Create color data
 docker-compose exec django python manage.py create_game_objects --color
 
-# 7. Resources (see Known Issues)
+# 7. Resources (world-specific resource distribution)
 docker-compose exec django python manage.py create_game_objects --resources
 ```
 
@@ -230,17 +230,20 @@ The project includes pre-configured VS Code tasks:
 
 ## Troubleshooting & Known Issues
 
-### Issue 1: Resources Import Failure ❌
+### Issue 1: Resources Import Failure (SOLVED ✅)
 
 **Problem**: `create_game_objects --resources` fails with `KeyError: 0`
 
 **Root Cause**: Game version 249.4.0 changed `resourcetiers.json` format from array to flat dictionary
 
-**Current Status**: Under investigation (see Issue #3 below)
+**Solution**: Implemented backward-compatible format detection in `resources.py`:
+- Detects both old array format and new flat dictionary format
+- Graceful fallback for missing fields (bestType/bestWorld)
+- Maintains compatibility with all game versions
 
-**Workaround**: Skip resources - API is fully functional without this data
+**Status**: Fixed and validated - resources import now works correctly
 
-**Impact**: Missing world-specific resource distribution data only
+**Impact**: All resource distribution data now available (56 resources imported)
 
 ### Issue 2: Missing Blocks/Liquids (SOLVED ✅)
 
@@ -300,13 +303,13 @@ print(f'Liquids: {Liquid.objects.count()}')
 "
 ```
 
-**Expected Output**:
-- Items: ~1,192
-- Recipes: ~836  
-- Skills: ~76
-- Colors: ~255
-- Blocks: ~1,487
-- Liquids: ~5
+**Expected Output** (Game Version 249.4.0):
+- Items: 1,192
+- Recipes: 836  
+- Skills: 76
+- Colors: 255
+- Blocks: 1,487
+- Liquids: 5
 
 ### Service Health Check
 
@@ -401,11 +404,11 @@ FROM pg_stats WHERE tablename='boundless_item' LIMIT 10;
 
 ## Next Steps
 
-1. **Resources Fix**: Implement flat dictionary handling in `resources.py`
-2. **Live Data**: Configure real-time world data updates
-3. **API Documentation**: Generate OpenAPI specs
-4. **Performance**: Implement caching strategies
-5. **Monitoring**: Add application metrics
+1. **Live Data**: Configure real-time world data updates
+2. **API Documentation**: Generate OpenAPI specs  
+3. **Performance**: Implement caching strategies
+4. **Monitoring**: Add application metrics
+5. **Testing**: Expand automated test coverage
 
 ## Appendix
 

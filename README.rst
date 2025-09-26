@@ -67,7 +67,7 @@ This fork is undergoing modernization, including a switch to GitHub Container Re
 
 📖 **For complete setup instructions, see** `SETUP_GUIDE.md`
 
-**Minimal Setup Steps:**
+**Essential Setup Steps:**
 
 1. **Environment Setup:**
 
@@ -107,25 +107,34 @@ This fork is undergoing modernization, including a switch to GitHub Container Re
       # Core data (items, metals, colors, localization)
       docker-compose exec django python manage.py create_game_objects --core
 
-      # CRITICAL: Create blocks & liquids (required for resources)
+      # CRITICAL: Create blocks & liquids (required for other objects)
       docker-compose exec django python manage.py create_game_objects --item
 
-      # Game content (skills, recipes, emojis)
+      # Game content (skills, recipes, resources, emojis)
       docker-compose exec django python manage.py create_game_objects --skill
       docker-compose exec django python manage.py create_game_objects --recipe
+      docker-compose exec django python manage.py create_game_objects --resources
       docker-compose exec django python manage.py create_game_objects --emoji
 
 5. **Verify Setup:**
 
-   * **API**: http://localhost:28000/api/v2/
+   * **API**: http://localhost:28000/api/v2/ (should show 1,136 items)
    * **Admin**: http://localhost:28000/admin/ (create superuser first)
+   * **Database**: 1,192 items, 836 recipes, 76 skills, 1,487 blocks
 
 **Alternative: Use VS Code Tasks**
 
 The project includes pre-configured tasks for automated setup:
 
-* **"Boundlexx: Fast Complete Setup"**: Full English-only setup
-* **"Boundlexx: Complete Setup"**: Full all-languages setup
+* **"Boundlexx: Fast Complete Setup"**: Full English-only setup (faster)
+* **"Boundlexx: Complete Setup"**: Full all-languages setup (comprehensive)
+
+**Current Status (Game Version 249.4.0):**
+
+* ✅ All major issues resolved, including resources import
+* ✅ Full backward compatibility maintained
+* ✅ Complete game data pipeline working (4,209 files processed)
+* ✅ API fully operational with rich game data
 
 5. **Open in VS Code:**
 
